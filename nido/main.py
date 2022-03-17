@@ -18,6 +18,8 @@ import os
 
 from flask import Flask, request, redirect, session, url_for
 
+from .models import db, User
+
 from .auth import auth_bp
 
 
@@ -35,11 +37,14 @@ def create_app(testing_config=None):
         conf_file = os.environ.get("NIDO_CONFIG_FILE") or "nido.cfg"
         app.config.from_pyfile(conf_file)
 
+    db.init_app(app)
+
     # a simple page that says hello
     @app.route("/")
     def index():
-        name = session.get("username")
-        if name:
+        user_id = session.get("user_id")
+        if user_id:
+            name = User.query.get(user_id).personal_name
             return f"Hello, {name}!"
         else:
             return redirect(url_for("login"))

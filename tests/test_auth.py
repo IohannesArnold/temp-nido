@@ -1,17 +1,4 @@
-import pytest
-
-from nido import create_app
-
-
-@pytest.fixture
-def app():
-    app = create_app({"TESTING": True, "SECRET_KEY": "VERY_SECRET"})
-    yield app
-
-
-@pytest.fixture()
-def client(app):
-    return app.test_client()
+from nido.models import User
 
 
 def test_no_user_redirect(client):
@@ -19,6 +6,11 @@ def test_no_user_redirect(client):
     assert response.status_code == 302
 
 
-def test_user_login(client):
-    response = client.post("/login", data={"ident": "Test"}, follow_redirects=True)
-    assert b"Hello, Test" in response.data
+def test_user_login(client, session):
+    user = User(personal_name="Rudd", family_name="Thom", email="rthom0@com.com")
+    session.add(user)
+    session.commit()
+    response = client.post(
+        "/login", data={"ident": "rthom0@com.com"}, follow_redirects=True
+    )
+    assert b"Hello, Rudd" in response.data
