@@ -2,6 +2,7 @@ import pytest
 
 from nido import create_app
 from nido.models import db as _db
+from mock_data import seed_db
 
 
 @pytest.fixture(scope="session")
@@ -28,6 +29,7 @@ def app():
 def db(app):
     _db.app = app
     _db.create_all()
+    seed_db(_db)
 
     yield _db
 
