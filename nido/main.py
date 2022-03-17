@@ -31,6 +31,9 @@ def create_app(testing_config=None):
     # Only used for pytest
     if testing_config:
         app.config.from_mapping(testing_config)
+    else:
+        conf_file = os.environ.get("NIDO_CONFIG_FILE") or "nido.cfg"
+        app.config.from_pyfile(conf_file)
 
     # a simple page that says hello
     @app.route("/")
