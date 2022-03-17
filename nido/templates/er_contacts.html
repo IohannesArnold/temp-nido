@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Emergency Contacts{% endblock %}
+{% block body_id %}er-contacts{% endblock %}
+{% block body %}
+    <main>
+        <h1>Emergency Contacts</h1>
+        <h2>Contacts on File</h2>
+        {% if current_user.er_contacts %}
+        <table>
+            <thead><tr>
+                <th>Name</th>
+                <th>Relation</th>
+                <th>Phone</th>
+                <th>Email</th>
+                <th>Notes</th>
+                <th></th>
+            </tr></thead>
+            {% for contact in current_user.er_contacts %}
+            <tr>
+                <td>{{contact.personal_name}} {{contact.family_name}}</td>
+                <td>{{contact.relation}}</td>
+                <td>{{contact.phone or ""}}</td>
+                <td>{{contact.email or ""}}</td>
+                <td>{{contact.notes or ""}}</td>
+                <td><form method="post">
+                <input type="hidden" name="delete_id" value="{{contact.id}}"/>
+                <button>Delete</button>
+                </form></td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+        <p>There are no emergency contacts on file for you.</p>
+        {% endif %}
+        <h2>Add Emergency Contact</h2>
+        <form method="post">
+            <label>First Name:<input name="first_name" required></label>
+            <label>Last Name:<input name="last_name" required></label>
+            <label>Relation:<input name="relation" required></label>
+            <label>Phone Number:<input name="phone" type="tel" pattern="^\d{3}-\d{3}-\d{4}$" placeholder="555-555-5555"></label>
+            <label>Email:<input type="email" name="email" placeholder="account@example.com"></label>
+            <label>Notes:<textarea name="notes"></textarea></label>
+            <button>Add</button>
+        </form>
+    </main>
+{% endblock %}

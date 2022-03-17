@@ -64,8 +64,26 @@ class User(db.Model):
     email = db.Column(db.String(80), unique=True)
     phone = db.Column(db.String(40), unique=True)
 
+    er_contacts = db.relationship(
+        "EmergencyContact", lazy=True, backref=db.backref("user", lazy=True)
+    )
+
     def __repr__(self):
         return "<User %r %r>" % self.personal_name, self.family_name
 
     def is_authenticated(self):
         return True
+
+
+class EmergencyContact(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    personal_name = db.Column(db.String(80), nullable=False)
+    family_name = db.Column(db.String(80), nullable=False)
+    relation = db.Column(db.String(80), nullable=False)
+    email = db.Column(db.String(80))
+    phone = db.Column(db.String(40))
+    notes = db.Column(db.Text)
+
+    def __repr__(self):
+        return "<ERContact %r %r>" % self.first_name, self.last_name

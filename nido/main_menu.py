@@ -29,5 +29,6 @@ def get_main_menu():
     menu_list = []
     menu_list.append(MenuLink("Dashboard", url_for("dash.dashboard")))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
+    menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list
