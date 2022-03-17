@@ -14,11 +14,29 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+import functools
+
 from flask import Blueprint, g, render_template, redirect, request, url_for, session
+from werkzeug.local import LocalProxy
 
 from .models import User
 
-auth_bp = Blueprint("auth", __name__)
+
+## Create login_required attribute
+
+
+def login_required(view):
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get("user_id") is None:
+            session["next"] = request.url
+            return redirect(url_for("login"))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+## Create 'current_user' function for insertion into templates
 
 
 class NullUser:
@@ -37,6 +55,15 @@ def get_user():
         else:
             g.user = NullUser()
     return g.user
+
+
+current_user = LocalProxy(lambda: get_user())
+
+
+## Create blueprint for auth pages
+
+
+auth_bp = Blueprint("auth", __name__)
 
 
 @auth_bp.route("/login", methods=["GET", "POST"])

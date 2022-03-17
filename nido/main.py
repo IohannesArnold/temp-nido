@@ -16,11 +16,11 @@
 
 import os
 
-from flask import Flask, request, redirect, session, url_for
+from flask import Flask
 
 from .models import db, User
-
-from .auth import auth_bp
+from .auth import auth_bp, current_user
+from .dashboard import dash_bp
 
 
 def create_app(testing_config=None):
@@ -39,18 +39,12 @@ def create_app(testing_config=None):
 
     db.init_app(app)
 
-    # a simple page that says hello
-    @app.route("/")
-    def index():
-        user_id = session.get("user_id")
-        if user_id:
-            name = User.query.get(user_id).personal_name
-            return f"Hello, {name}!"
-        else:
-            return redirect(url_for("login"))
+    app.jinja_env.globals.update(current_user=current_user)
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(dash_bp)
     app.add_url_rule("/login", endpoint="login")
     app.add_url_rule("/logout", endpoint="logout")
+    app.add_url_rule("/", endpoint="index")
 
     return app
