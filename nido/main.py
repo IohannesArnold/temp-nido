@@ -22,6 +22,7 @@ from .models import db, User
 from .main_menu import get_main_menu
 from .auth import auth_bp, current_user
 from .dashboard import dash_bp
+from .directory import directory_bp
 
 
 def create_app(testing_config=None):
@@ -45,6 +46,7 @@ def create_app(testing_config=None):
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dash_bp)
+    app.register_blueprint(directory_bp, url_prefix="/directory")
     app.add_url_rule("/login", endpoint="login")
     app.add_url_rule("/logout", endpoint="logout")
     app.add_url_rule("/", endpoint="index")
