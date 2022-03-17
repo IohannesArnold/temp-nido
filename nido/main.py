@@ -16,7 +16,7 @@
 
 import os
 
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, session, url_for
 
 from .auth import auth_bp
 
@@ -38,7 +38,7 @@ def create_app(testing_config=None):
     # a simple page that says hello
     @app.route("/")
     def index():
-        name = request.cookies.get("username")
+        name = session.get("username")
         if name:
             return f"Hello, {name}!"
         else:
@@ -46,5 +46,6 @@ def create_app(testing_config=None):
 
     app.register_blueprint(auth_bp)
     app.add_url_rule("/login", endpoint="login")
+    app.add_url_rule("/logout", endpoint="logout")
 
     return app

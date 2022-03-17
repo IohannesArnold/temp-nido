@@ -5,12 +5,7 @@ from nido import create_app
 
 @pytest.fixture
 def app():
-    app = create_app(
-        {
-            "TESTING": True,
-        }
-    )
-
+    app = create_app({"TESTING": True, "SECRET_KEY": "VERY_SECRET"})
     yield app
 
 

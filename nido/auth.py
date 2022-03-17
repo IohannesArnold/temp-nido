@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, render_template, redirect, request, url_for, make_response
+from flask import Blueprint, render_template, redirect, request, url_for, session
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -23,8 +23,13 @@ auth_bp = Blueprint("auth", __name__)
 def login():
     if request.method == "POST":
         ident = request.form.get("ident")
-        resp = make_response(redirect(url_for("index")))
-        resp.set_cookie("username", ident)
-        return resp
+        session["username"] = ident
+        return redirect(url_for("index"))
 
     return render_template("login.html")
+
+
+@auth_bp.route("/logout")
+def logout():
+    session.pop("username")
+    return redirect(url_for("login"))
