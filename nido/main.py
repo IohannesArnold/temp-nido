@@ -19,6 +19,7 @@ import os
 from flask import Flask
 
 from .models import db, User
+from .main_menu import get_main_menu
 from .auth import auth_bp, current_user
 from .dashboard import dash_bp
 
@@ -39,6 +40,7 @@ def create_app(testing_config=None):
 
     db.init_app(app)
 
+    app.jinja_env.globals.update(get_main_menu=get_main_menu)
     app.jinja_env.globals.update(current_user=current_user)
 
     app.register_blueprint(auth_bp)
