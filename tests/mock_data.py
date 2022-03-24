@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from nido.models import EmergencyContact, Community, User, Residence
 
 community_arr = [
@@ -83,3 +84,12 @@ def seed_db(db):
     db.session.add(er_arr[0])
 
     db.session.commit()
+
+
+if __name__ == "__main__":
+    from nido import create_app
+    from nido.models import db
+
+    with create_app().app_context():
+        db.create_all()
+        seed_db(db)
