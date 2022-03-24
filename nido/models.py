@@ -32,7 +32,7 @@ class Community(db.Model):
     )
 
     def __repr__(self):
-        return "<Community %r>" % self.name
+        return f"Community(name={self.name}, country={self.country})"
 
 
 class Residence(db.Model):
@@ -56,7 +56,15 @@ class Residence(db.Model):
     )
 
     def __repr__(self):
-        return "<Residence %r %r>" % self.unit_no, self.street
+        return (
+            f"Residence("
+            f"unit_no={self.unit_no},"
+            f"street={self.street},"
+            f"locality={self.locality},"
+            f"postcode={self.postcode},"
+            f"region={self.region}"
+            f")"
+        )
 
 
 class ResidenceOccupancy(db.Model):
@@ -78,6 +86,9 @@ class ResidenceOccupancy(db.Model):
     relationship_name = db.Column(db.String(40), nullable=False, default="Occupant")
     is_owner = db.Column(db.Boolean, nullable=False, default=False)
 
+    def __repr__(self):
+        return "ResidenceOccupancy()"
+
 
 class User(db.Model):
     __table_args__ = (db.UniqueConstraint("id", "community_id"),)
@@ -95,7 +106,14 @@ class User(db.Model):
     )
 
     def __repr__(self):
-        return "<User %r %r>" % self.personal_name, self.family_name
+        return (
+            f"User("
+            f"personal_name={self.personal_name},"
+            f"family_name={self.family_name},"
+            f"email={self.email},"
+            f"phone={self.phone}"
+            f")"
+        )
 
     def is_authenticated(self):
         return True
@@ -112,4 +130,13 @@ class EmergencyContact(db.Model):
     notes = db.Column(db.Text)
 
     def __repr__(self):
-        return "<ERContact %r %r>" % self.first_name, self.last_name
+        return (
+            f"EmergencyContact("
+            f"personal_name={self.personal_name},"
+            f"family_name={self.family_name},"
+            f"relation={self.relation},"
+            f"email={self.email},"
+            f"phone={self.phone},"
+            f"notes={self.notes}"
+            f")"
+        )
