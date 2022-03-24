@@ -36,6 +36,8 @@ class Community(db.Model):
 
 
 class Residence(db.Model):
+    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+
     id = db.Column(db.Integer, primary_key=True)
     community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
 
@@ -47,17 +49,41 @@ class Residence(db.Model):
     ownership_stake = db.Column(db.Numeric(3, 10))
 
     occupants = db.relationship(
-        "User", lazy=True, backref=db.backref("residence", lazy=True)
+        "User",
+        secondary="residence_occupancy",
+        lazy=True,
+        backref=db.backref("residences", lazy=True),
     )
 
     def __repr__(self):
         return "<Residence %r %r>" % self.unit_no, self.street
 
 
+class ResidenceOccupancy(db.Model):
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ["user_id", "u_community_id"], ["user.id", "user.community_id"]
+        ),
+        db.ForeignKeyConstraint(
+            ["residence_id", "r_community_id"],
+            ["residence.id", "residence.community_id"],
+        ),
+        db.CheckConstraint("u_community_id = r_community_id"),
+    )
+
+    residence_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    user_id = db.Column(db.Integer, nullable=False, primary_key=True)
+    r_community_id = db.Column(db.Integer, nullable=False)
+    u_community_id = db.Column(db.Integer, nullable=False)
+    relationship_name = db.Column(db.String(40), nullable=False, default="Occupant")
+    is_owner = db.Column(db.Boolean, nullable=False, default=False)
+
+
 class User(db.Model):
+    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+
     id = db.Column(db.Integer, primary_key=True)
     community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
-    residence_id = db.Column(db.Integer, db.ForeignKey("residence.id"), nullable=False)
 
     personal_name = db.Column(db.String(80), nullable=False)
     family_name = db.Column(db.String(80), nullable=False)

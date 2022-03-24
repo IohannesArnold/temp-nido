@@ -77,7 +77,7 @@ def seed_db(db):
 
     for i, r in enumerate(resident_arr):
         r.community = community_arr[0]
-        r.residence = residence_arr[i]
+        r.residences.append(residence_arr[i])
         db.session.add(r)
 
     er_arr[0].user = resident_arr[0]
