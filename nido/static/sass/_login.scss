@@ -1,0 +1,29 @@
+/* Copyright (c) 2021 by Maxim Konoval (https://codepen.io/frontendmax/pen/RazXVb)
+ * Released under MIT license, see link above */
+$prim: #53e3a6;
+$offwhite: #fbfdff;
+
+body#login {
+    background: url('/static/bg.svg') no-repeat center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    margin: 0;
+
+    main { 
+        margin-bottom: 20px;
+        background: $offwhite;
+        color: #3b4465;
+        width: 300px;
+        padding: 25px;
+        box-sizing: border-box;
+        box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+        border-radius: 2px;
+        
+    }
+
+    h1 {
+        text-align: center;
+    }
+}          

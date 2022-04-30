@@ -1,0 +1,112 @@
+body:not(#login) main {
+  margin: 0 0 0 300px;
+  padding: 20px 40px;
+  box-sizing: border-box;
+  height: 100%;
+ 
+  @media(max-width:699px) {
+    margin-left: 50px;
+  }
+}
+
+input#main_menu_toggle {
+  display: none;
+}
+
+input#main_menu_toggle:checked {
+  @media(max-width:699px) {
+    &~ nav#main_menu {
+      width: 300px;
+    }
+  }
+  @media(min-width:700px) {
+    &~ nav#main_menu {
+      width: 50px;
+    }
+ 
+    &~ main {
+      margin-left: 50px;
+      transition: margin .4s;
+    }
+  }
+}
+
+/* Copyright (c) 2021 by Stephen Scaff (https://codepen.io/StephenScaff/pen/bVbEbJ)
+ * Released under MIT license, see link above */
+
+nav#main_menu {
+  position: fixed;
+  width: 300px;
+  height: 100%;
+  top: 0;
+  background-color: #19222a;
+  z-index: 1;
+  transition: width .4s;
+
+  @media(max-width:699px) {
+    width: 50px;
+  }
+  
+  ul {
+    display: block;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  ul li {
+    margin-left: 0;
+    padding-left: 0;
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    height: 50px;
+  }
+
+  > ul > li:last-child {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+  }
+
+  a, label {
+    color: rgba(255,255,255,0.9);
+    text-decoration: none;
+    font-size: 1.5rem;
+    padding: 15px 12px;
+    position: relative;
+    display:block;
+
+    &:hover{
+      background-color: rgba(0,0,0,0.9);
+    }
+
+    &:before {
+      display: inline-block;
+      vertical-align: middle;
+      padding-right: 10px;
+      content: url('/static/icons/link.svg');
+    }
+
+    &[href="/dashboard"]:before {
+      content: url('/static/icons/dashboard.svg');
+    }
+
+    &[href="/my-household/"]:before {
+      content: url('/static/icons/household.svg');
+    }
+
+    &[href="/directory/"]:before {
+      content: url('/static/icons/contacts.svg');
+    }
+
+    &[href="/emergency-contacts/"]:before {
+      content: url('/static/icons/shield.svg');
+    }
+
+    &[href="/logout"]:before {
+      content: url('/static/icons/logout.svg');
+    }
+  }
+
+}

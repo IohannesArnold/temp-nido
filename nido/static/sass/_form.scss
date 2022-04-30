@@ -1,0 +1,56 @@
+/* Copyright (c) 2021 by Maxim Konoval (https: //codepen.io/frontendmax/pen/RazXVb)
+ * Released under MIT license, see link above */
+
+form {
+  max-width: 800px; 
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  align-items: flex-start;
+
+  label {
+      font-size: 1.6rem;
+      color: #a1b4b4;
+      max-width: 250px;
+      width: 100%;
+      margin: 0px 8px;
+  }
+
+  input, textarea {
+      display: block;
+      box-sizing: border-box;
+      width: 100%;
+      margin: 8px 0;
+      font-size: 1.6rem;
+      color: #3b4465;
+      background: #eef9fe;
+      border: 1px solid #a1b4b4; //#cddbef;
+      border-radius: 2px;
+      &:not(:focus):not(:required):invalid {
+        border-color: red;
+      }
+  } 
+
+  input {
+      line-height: 4.0rem;
+      padding: 0 15px;
+  } 
+
+  textarea {
+      padding: 10px 15px;
+  } 
+
+  button {
+      display: block;
+      min-width: 120px;
+      margin: 20px 25% 10px;
+      font-size: 1.8rem;
+      line-height: 4.0rem;
+      border-radius: 25px;
+      border: none;
+      color: $offwhite;
+      background: $prim;
+  }
+}

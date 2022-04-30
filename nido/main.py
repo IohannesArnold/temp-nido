@@ -41,6 +41,22 @@ def create_app(testing_config=None):
         conf_file = os.environ.get("NIDO_CONFIG_FILE") or "nido.cfg"
         app.config.from_pyfile(conf_file)
 
+    if app.env == "development":
+        # Don't import sassuntils until now since it's not installed for prod
+        from sassutils.wsgi import SassMiddleware
+
+        app.wsgi_app = SassMiddleware(
+            app.wsgi_app,
+            {
+                "nido": {
+                    "sass_path": "static/sass",
+                    "css_path": "static/css",
+                    "wsgi_path": "/static/css",
+                    "strip_extension": True,
+                }
+            },
+        )
+
     db.init_app(app)
 
     app.jinja_env.globals.update(get_main_menu=get_main_menu)

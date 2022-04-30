@@ -1,0 +1,75 @@
+/* Copyright (c) 2021 by Alico (https://codepen.io/alico/pen/bpLgOL)
+ * Released under MIT license, see link above */
+
+table {
+  border-collapse: collapse; 
+  background: white;
+  border-radius: 6px;
+  overflow: hidden;
+  max-width: 800px; 
+  width: 100%;
+  margin: 0 auto;
+  position: relative;
+  
+  * {
+    position: relative;
+  }
+  
+  td,th {
+    padding-left: 8px;
+    text-align:left;
+    font-size: 1.6rem;
+  }
+
+  thead tr {
+    height: 6rem;
+    color: $offwhite;
+    background: $prim;
+  }
+  
+  tbody tr {
+    height: 4.8rem;
+    border-bottom: 1px solid #E3F1D5;
+    &:last-child  { border:0; }
+  }
+  
+  td[colspan] {
+    text-align: center;
+  }
+}
+
+@media screen and (max-width: 1000px) {
+  table {
+    display:block;
+
+    > *,tr,td,th {
+      display:block;
+    }
+    
+    thead, td:empty {
+      display:none
+    }
+
+    tbody tr {
+      height:auto;
+      padding:8px 0;
+
+      td {
+        padding-left:5%;
+        margin-bottom:12px;
+
+        &[rowspan] {
+          padding-left:0;
+        }
+
+        &:last-child {
+          margin-bottom:0;
+        }
+
+        &[colspan] {
+          text-align:left;
+        }
+      }        
+    }
+  }
+}

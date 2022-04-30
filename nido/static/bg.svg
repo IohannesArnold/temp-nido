@@ -1,0 +1,39 @@
+<!-- Copyright (c) 2021 by Lewi Hussey (https://codepen.io/Lewitje/pen/BNNJjo) -->
+<!-- Released under MIT license, see link above -->
+<svg version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style type="text/css"><![CDATA[
+    svg {background: linear-gradient(to bottom right, #50a3a2 0%, #53e3a6 100%);}
+    ]]></style>
+  </defs>
+  <rect width="40px" height="40px" x="10%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="0s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="80px" height="80px" x="20%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="2s" dur="17s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="10px" height="10px" x="25%" y="100%" fill="white" fill-opacity="0.30">
+    <animate attributeName="y" values="100%;-50%" begin="2s" dur="40s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="40px" height="40px" x="25%" y="100%" fill="white" fill-opacity="0.25">
+    <animate attributeName="y" values="100%;-50%" begin="4s" dur="22s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="160px" height="160px" x="32%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="7s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="60px" height="60px" x="40%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="0s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="20px" height="20px" x="55%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="15s" dur="40s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="40px" height="40px" x="70%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="0s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="120px" height="120px" x="80%" y="100%" fill="white" fill-opacity="0.20">
+    <animate attributeName="y" values="100%;-50%" begin="3s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+  <rect width="160px" height="160px" x="90%" y="100%" fill="white" fill-opacity="0.15">
+    <animate attributeName="y" values="100%;-50%" begin="11s" dur="25s" repeatCount="indefinite"/>
+  </rect>
+</svg>
