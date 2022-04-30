@@ -24,6 +24,7 @@ from .auth import auth_bp, current_user
 from .dashboard import dash_bp
 from .directory import directory_bp
 from .er_contacts import er_bp
+from .household import bp as house_bp
 
 
 def create_app(testing_config=None):
@@ -49,6 +50,7 @@ def create_app(testing_config=None):
     app.register_blueprint(dash_bp)
     app.register_blueprint(directory_bp, url_prefix="/directory")
     app.register_blueprint(er_bp, url_prefix="/emergency-contacts")
+    app.register_blueprint(house_bp, url_prefix="/my-household")
     app.add_url_rule("/login", endpoint="login")
     app.add_url_rule("/logout", endpoint="logout")
     app.add_url_rule("/", endpoint="index")

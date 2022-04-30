@@ -1,4 +1,4 @@
-#  Nido main_menu.py
+#  Nido household.py
 #  Copyright (C) 2022 John Arnold
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -14,22 +14,26 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import url_for
-from .auth import current_user
+from flask import Blueprint, abort, render_template, redirect, request, url_for
+from .auth import login_required, current_user
+
+from .models import db, Residence, ResidenceOccupancy, User
+
+bp = Blueprint("household", __name__)
 
 
-class MenuLink:
-    def __init__(self, name, href, submenu=None):
-        self.name = name
-        self.href = href
-        self.submenu = submenu
-
-
-def get_main_menu():
-    menu_list = []
-    menu_list.append(MenuLink("Dashboard", url_for("dash.dashboard")))
-    menu_list.append(MenuLink("My Household", url_for("household.root")))
-    menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
-    menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
-    menu_list.append(MenuLink("Logout", url_for("logout")))
-    return menu_list
+@bp.route("/")
+@login_required
+def root():
+    occupancies = (
+        db.session.query(ResidenceOccupancy)
+        .join(Residence)
+        .filter(
+            ResidenceOccupancy.user_id == current_user.id,
+        )
+        .order_by(ResidenceOccupancy.is_owner.desc())
+        .all()
+    )
+    if len(occupancies) == 0:
+        abort(404)
+    return render_template("my_household.html", occupancies=occupancies)

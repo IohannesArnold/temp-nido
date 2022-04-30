@@ -86,6 +86,9 @@ class ResidenceOccupancy(db.Model):
     relationship_name = db.Column(db.String(40), nullable=False, default="Occupant")
     is_owner = db.Column(db.Boolean, nullable=False, default=False)
 
+    residence = db.relationship("Residence", lazy=True, viewonly=True)
+    user = db.relationship("User", lazy=True, viewonly=True)
+
     def __repr__(self):
         return "ResidenceOccupancy()"
 

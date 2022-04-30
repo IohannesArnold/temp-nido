@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}My Household{% endblock %}
+{% block body_id %}household{% endblock %}
+{% block body %}
+    <main>
+        <h1>My Household</h1>
+        {% for occupancy in occupancies %}
+            {%if occupancies|length > 1%}
+                <h2>Residence {{loop.index}}</h2>
+            {%endif%}
+            <h3>Residence Information</h3>
+            <dl>
+                <dt>Address:</dt>
+                <dd>{{occupancy.residence.street}}
+                <br/>{{occupancy.residence.unit_no}}
+                <br/>{{occupancy.residence.locality}}, {{occupancy.residence.region}}
+                {{occupancy.residence.postcode}}</dd>
+                {% if occupancy.residence.ownership_stake and occupancy.is_owner %}
+                <dt>Ownership Percentage:</dt>
+                <dd>{{occupancy.residence.ownership_stake.normalize()}}%</dd>
+                {% endif %}
+            </dl>
+            <h3>Residence Occupants</h3>
+            <ul>
+                {% for member in occupancy.residence.occupants %}
+                <li>{{member.personal_name}} {{member.family_name}}</li>
+                {% endfor %}
+            </ul>
+        {% endfor %}
+    </main>
+{% endblock %}
+
