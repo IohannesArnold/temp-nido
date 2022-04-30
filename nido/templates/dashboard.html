@@ -1,5 +1,16 @@
 {% extends "base.html" %}
 {% block title %}Hello {{current_user.personal_name}}{% endblock %}
+{% block body_id %}dashboard{% endblock %}
 {% block body %}
-    <h1>Hello {{current_user.personal_name}}</h1>
+    <main>
+        <h1>Hello {{current_user.personal_name}}</h1>
+        <h2>Quick links</h2>
+        <ul>
+            <li>Pay a bill</li>
+            <li>File a maintence request</li>
+            <li>Add or remove member of household</li>
+        </ul>
+        <h2>Announcements</h2>
+        <h2>Calendar</h2>
+    </main>
 {% endblock %}
