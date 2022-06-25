@@ -1,5 +1,12 @@
 #!/usr/bin/env python
-from nido.models import EmergencyContact, Community, User, Residence
+from nido.models import (
+    EmergencyContact,
+    Community,
+    User,
+    Residence,
+    Position,
+    RootAuthorization,
+)
 
 community_arr = [
     Community(name="Rolfson-Durgan", country="United States"),
@@ -69,8 +76,15 @@ er_arr = [
     )
 ]
 
+pos_arr = [Position(name="President", min_size=1, max_size=1)]
+
+omni = RootAuthorization(
+    name="Omnipotent",
+)
+
 
 def seed_db(db):
+
     for a in residence_arr:
         a.community = community_arr[0]
         db.session.add(a)
@@ -80,9 +94,16 @@ def seed_db(db):
         r.residences.append(residence_arr[i])
         db.session.add(r)
 
+    omni.community = community_arr[0]
+
+    for p in pos_arr:
+        p.community = community_arr[0]
+        p.authorization = omni
+        p.members.append(resident_arr[0])
+        db.session.add(p)
+
     er_arr[0].user = resident_arr[0]
     db.session.add(er_arr[0])
-
     db.session.commit()
 
 

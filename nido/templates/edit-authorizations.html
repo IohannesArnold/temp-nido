@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Edit Authorizations{% endblock %}
+{% block body_id %}edit-authorizations{% endblock %}
+{% block body %}
+<main>
+  <h1>Edit Authorizations</h1>
+  <h2>Current Authorizations</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Abilities</th>
+        <th>Positions</th>
+        <th></th>
+      </tr></thead>
+      {% for auth in authorizations %}
+      <tr>
+        <td>{{auth.name}}</td>
+        <td></td>
+        <td>{% for pos in auth.positions %}
+          {{pos.name}}{% if not loop.last %}, {% endif %}
+        {%endfor%}</td>
+        <td><form method="post">
+          <input type="hidden" name="delete_id" value="{{auth.id}}"/>
+          <button>Delete</button>
+        </form></td>
+      </tr>
+      {% endfor %}
+    </table>
+</main>
+{% endblock %}
+

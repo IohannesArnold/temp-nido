@@ -15,12 +15,15 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import case
+from sqlalchemy.orm import validates
 
 db = SQLAlchemy()
 
 
 class Community(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+
     name = db.Column(db.String(120), nullable=False)
     country = db.Column(db.String(80), nullable=False)
 
@@ -29,6 +32,12 @@ class Community(db.Model):
     )
     members = db.relationship(
         "User", lazy=True, backref=db.backref("community", lazy=True)
+    )
+    positions = db.relationship(
+        "Position", lazy=True, backref=db.backref("community", lazy=True)
+    )
+    abilities = db.relationship(
+        "Authorization", lazy=True, backref=db.backref("community", lazy=True)
     )
 
     def __repr__(self):
@@ -93,6 +102,112 @@ class ResidenceOccupancy(db.Model):
         return "ResidenceOccupancy()"
 
 
+user_positions = db.Table(
+    "user_positions",
+    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
+    db.Column(
+        "position_id", db.Integer, db.ForeignKey("position.id"), primary_key=True
+    ),
+)
+
+
+class Position(db.Model):
+    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    authorization_id = db.Column(
+        db.Integer, db.ForeignKey("authorization.id"), nullable=False
+    )
+
+    name = db.Column(db.String(80), nullable=False)
+    max_size = db.Column(db.Integer, nullable=True)
+    min_size = db.Column(db.Integer, nullable=True)
+
+    members = db.relationship(
+        "User",
+        lazy=True,
+        secondary=user_positions,
+        backref=db.backref("positions", lazy=True),
+    )
+
+    def __repr__(self):
+        return f"Position(" f"name={self.name}," f"max_size={self.max_size}" f")"
+
+    @validates("members", include_removes=True)
+    def validate_members(self, _key, member, is_remove):
+        if (
+            not is_remove
+            and self.max_size
+            and self.max_size
+            <= db.session.query(user_positions)
+            .filter_by(position_id=self.id)
+            .distinct()
+            .count()
+        ):
+            raise Exception
+
+        if (
+            is_remove
+            and self.min_size
+            and self.min_size
+            >= db.session.query(user_positions)
+            .filter_by(position_id=self.id)
+            .distinct()
+            .count()
+        ):
+            raise Exception
+
+        return member
+
+
+class Authorization(db.Model):
+    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+
+    id = db.Column(db.Integer, primary_key=True)
+    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    parent_id = db.Column(db.Integer, db.ForeignKey("authorization.id"))
+
+    name = db.Column(db.String(80), nullable=False)
+
+    positions = db.relationship(
+        "Position",
+        lazy=True,
+        backref=db.backref("authorization", lazy=True),
+    )
+    children = db.relationship(
+        "Authorization",
+        lazy=True,
+        backref=db.backref("parent", lazy=True, remote_side=[id]),
+    )
+
+    __mapper_args__ = {
+        "polymorphic_on": case(
+            [
+                (parent_id == None, "root_authorization"),
+            ],
+            else_="authorization",
+        ),
+        "polymorphic_identity": "authorization",
+    }
+
+    def __repr__(self):
+        return f"Authorization(" f"name={self.name}" f")"
+
+    def permits(self):
+        return False
+
+
+class RootAuthorization(Authorization):
+    __mapper_args__ = {"polymorphic_identity": "root_authorization"}
+
+    def permits(self):
+        return True
+
+    def delegate(self, name):
+        return Authorization(name=name, parent=self)
+
+
 class User(db.Model):
     __table_args__ = (db.UniqueConstraint("id", "community_id"),)
 
@@ -120,6 +235,16 @@ class User(db.Model):
 
     def is_authenticated(self):
         return True
+
+    def is_admin(self):
+        return (
+            Position.query.filter_by(community_id=self.community_id)
+            .join(user_positions)
+            .filter_by(user_id=self.id)
+            .join(Authorization)
+            .count()
+            > 0
+        )
 
 
 class EmergencyContact(db.Model):

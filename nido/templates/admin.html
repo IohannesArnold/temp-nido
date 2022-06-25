@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}Administrative Center{% endblock %}
+{% block body_id %}admin-center{% endblock %}
+{% block body %}
+<main>
+  <h1>Administrative Center</h1>
+  <ul>
+    {% for link in menu_list %}
+    <li><a href="{{link.href}}">{{link.name}}</a></li>
+    {% endfor %}
+  </ul>
+</main>
+
+{% endblock %}

@@ -104,6 +104,10 @@ nav#main_menu {
       content: url('/static/icons/shield.svg');
     }
 
+    &[href="/admin/"]:before {
+      content: url('/static/icons/admin.svg');
+    }
+
     &[href="/logout"]:before {
       content: url('/static/icons/logout.svg');
     }

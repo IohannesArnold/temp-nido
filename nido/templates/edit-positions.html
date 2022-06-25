@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Edit Positions{% endblock %}
+{% block body_id %}edit-positions{% endblock %}
+{% block body %}
+<main>
+  <h1>Edit Positions</h1>
+  <h2>Current Positions</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th></th>
+      </tr></thead>
+      {% for position in positions %}
+      <tr>
+        <td>{{position.name}}</td>
+        <td><form method="post">
+          <input type="hidden" name="delete_id" value="{{position.id}}"/>
+          <button>Delete</button>
+        </form></td>
+      </tr>
+      {% endfor %}
+    </table>
+</main>
+{% endblock %}
+

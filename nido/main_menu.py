@@ -31,5 +31,7 @@ def get_main_menu():
     menu_list.append(MenuLink("My Household", url_for("household.root")))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
     menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
+    if current_user.is_admin():
+        menu_list.append(MenuLink("Admin Center", url_for("admin.root")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list

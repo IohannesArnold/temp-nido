@@ -21,6 +21,7 @@ from flask import Flask
 from .models import db, User
 from .main_menu import get_main_menu
 from .auth import auth_bp, current_user
+from .admin import admin_bp
 from .dashboard import dash_bp
 from .directory import directory_bp
 from .er_contacts import er_bp
@@ -64,6 +65,7 @@ def create_app(testing_config=None):
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dash_bp)
+    app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(directory_bp, url_prefix="/directory")
     app.register_blueprint(er_bp, url_prefix="/emergency-contacts")
     app.register_blueprint(house_bp, url_prefix="/my-household")

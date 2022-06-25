@@ -1,5 +1,5 @@
 import pytest
-from nido.models import Community, Residence, User
+from nido.models import Community, Residence, User, Position
 from sqlalchemy.exc import IntegrityError
 
 
@@ -20,3 +20,19 @@ def test_disjoint_residence_community_and_user_community(db):
     db.session.add(u)
     with pytest.raises(IntegrityError):
         db.session.commit()
+
+
+def test_position_max_size(session):
+    p = Position.query.get(1)
+    u2 = User.query.get(2)
+
+    with pytest.raises(Exception):
+        p.members.append(u2)
+
+
+def test_position_min_size(session):
+    p = Position.query.get(1)
+    u1 = User.query.get(1)
+
+    with pytest.raises(Exception):
+        p.members.remove(u1)
