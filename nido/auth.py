@@ -58,7 +58,7 @@ def get_user():
         session_id = session.get("user_id")
         if session_id:
             try:
-                g.user = current_app.Session.query(User).get(session_id)
+                g.user = current_app.Session.get(User, session_id)
             except:
                 g.user = NullUser()
         else:

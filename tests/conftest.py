@@ -31,13 +31,12 @@ def app():
 @pytest.fixture(scope="session")
 def db(app):
     db_session = app.Session()
-    Base.metadata.bind = db_session.get_bind()
-    Base.metadata.create_all()
+    Base.metadata.create_all(bind=db_session.get_bind())
     seed_db(db_session)
 
     yield db_session
 
-    Base.metadata.drop_all()
+    Base.metadata.drop_all(bind=db_session.get_bind())
 
 
 @pytest.fixture()

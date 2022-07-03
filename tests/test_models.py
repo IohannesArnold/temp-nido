@@ -23,16 +23,16 @@ def test_disjoint_residence_community_and_user_community(db):
 
 
 def test_position_max_size(session):
-    p = session.query(Position).get(1)
-    u2 = session.query(User).get(2)
+    p = session.get(Position, 1)
+    u2 = session.get(User, 2)
 
     with pytest.raises(Exception):
         p.members.append(u2)
 
 
 def test_position_min_size(session):
-    p = session.query(Position).get(1)
-    u1 = session.query(User).get(1)
+    p = session.get(Position, 1)
+    u1 = session.get(User, 1)
 
     with pytest.raises(Exception):
         p.members.remove(u1)

@@ -16,7 +16,6 @@
 
 from flask import current_app
 from sqlalchemy import Column, ForeignKey, Table
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
 import sqlalchemy.orm as orm
 import sqlalchemy.types as sql_types
@@ -27,7 +26,7 @@ import enum
 import datetime
 import decimal
 
-Base = declarative_base()
+Base = orm.declarative_base()
 
 
 class Community(Base):
@@ -207,9 +206,7 @@ class Authorization(Base):
 
     __mapper_args__ = {
         "polymorphic_on": sql_expr.case(
-            [
-                (parent_id == None, "root_authorization"),
-            ],
+            (parent_id == None, "root_authorization"),
             else_="authorization",
         ),
         "polymorphic_identity": "authorization",
