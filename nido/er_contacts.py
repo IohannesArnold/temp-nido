@@ -14,10 +14,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, current_app, render_template, request
 from .auth import login_required, current_user
 
-from .models import db, EmergencyContact
+from .models import EmergencyContact
 
 er_bp = Blueprint("er_contacts", __name__)
 
@@ -28,11 +28,11 @@ def root():
     if request.method == "POST":
         delete_id = request.form.get("delete_id")
         if delete_id:
-            delend = EmergencyContact.query.get(int(delete_id))
+            delend = current_app.Session.query(EmergencyContact).get(int(delete_id))
             if delend.user != current_user:
                 abort(403)
-            db.session.delete(delend)
-            db.session.commit()
+            current_app.Session.delete(delend)
+            current_app.Session.commit()
         else:
             f_name = request.form.get("first_name")
             l_name = request.form.get("last_name")
@@ -53,7 +53,7 @@ def root():
                 notes=notes,
                 user=current_user,
             )
-            db.session.add(new_ec)
-            db.session.commit()
+            current_app.Session.add(new_ec)
+            current_app.Session.commit()
 
     return render_template("er_contacts.html")

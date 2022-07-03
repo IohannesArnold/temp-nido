@@ -14,10 +14,10 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, abort, render_template, request
+from flask import Blueprint, abort, current_app, render_template, request
 from .auth import login_required, current_user
 
-from .models import db, BillingCharge, ResidenceOccupancy, RecurringCharge
+from .models import BillingCharge, ResidenceOccupancy, RecurringCharge
 
 from datetime import date
 
@@ -29,7 +29,7 @@ bill_bp = Blueprint("billing", __name__)
 def root():
     today = date.today()
     current_charges = (
-        db.session.query(BillingCharge)
+        current_app.Session.query(BillingCharge)
         .outerjoin(
             ResidenceOccupancy,
             BillingCharge.residence_id == ResidenceOccupancy.residence_id,
@@ -49,7 +49,7 @@ def root():
         .all()
     )
     recurring_charges = (
-        db.session.query(RecurringCharge)
+        current_app.Session.query(RecurringCharge)
         .outerjoin(
             ResidenceOccupancy,
             RecurringCharge.residence_id == ResidenceOccupancy.residence_id,

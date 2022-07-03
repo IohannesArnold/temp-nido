@@ -1,7 +1,10 @@
 import pytest
 
+
+from sqlalchemy.orm import sessionmaker, scoped_session
+
 from nido import create_app
-from nido.models import db as _db
+from nido.models import Base
 from mock_data import seed_db
 
 
@@ -27,13 +30,14 @@ def app():
 
 @pytest.fixture(scope="session")
 def db(app):
-    _db.app = app
-    _db.create_all()
-    seed_db(_db)
+    db_session = app.Session()
+    Base.metadata.bind = db_session.get_bind()
+    Base.metadata.create_all()
+    seed_db(db_session)
 
-    yield _db
+    yield db_session
 
-    _db.drop_all()
+    Base.metadata.drop_all()
 
 
 @pytest.fixture()
@@ -43,16 +47,10 @@ def client(app, db):
 
 @pytest.fixture(scope="function")
 def session(db):
-    connection = db.engine.connect()
+    connection = db.get_bind().connect()
     transaction = connection.begin()
-
-    options = dict(bind=connection, binds={})
-    session = db.create_scoped_session(options=options)
-
-    db.session = session
-
-    yield session
-
+    yield scoped_session(
+        sessionmaker(autocommit=False, autoflush=False, bind=connection)
+    )
     transaction.rollback()
     connection.close()
-    session.remove()

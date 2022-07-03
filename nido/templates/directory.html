@@ -7,7 +7,7 @@
         <details>
             <summary>Display Options</summary>
             <form method="GET">
-                <input type="hidden" name="p" value="{{listings_page.page}}"/>
+                <input type="hidden" name="p" value="{{page}}"/>
                 <label>Hide Vacant Units
                 <input type="checkbox" name="hide_vacant"
                 {% if hide_vacant %}checked{% endif %}/>
@@ -22,9 +22,7 @@
                 <th>Phone</th>
                 <th>Email</th>
             </tr></thead>
-            {% for listing in listings_page.items %}
-            {% if not listing.occupants and hide_vacant %}
-            {% else %}
+            {% for listing in listings %}
             <tr>
                 <td rowspan="{{listing.occupants|count or 1}}">
                 {% if show_street %}
@@ -48,24 +46,7 @@
                 <td colspan="3">Vacant</td>
             {% endif %}
             </tr>
-            {% endif %}
             {% endfor %}
         </table>
-        {% if listings_page.pages > 1 %}
-        <nav>
-            {% if listings_page.has_prev %}
-            <a href="{{url_for('.directory_page',
-                p=listings_page.page-1,
-                show_photos=show_p,
-                hide_vacant=hide_vacant)}}">Previous Page</a>
-            {% endif %}
-            {% if listings_page.has_next %}
-            <a href="{{url_for('.directory_page',
-                p=listings_page.page+1,
-                show_photos=show_p,
-                hide_vacant=hide_vacant)}}">Next Page</a>
-            {% endif %}
-        </nav>
-        {% endif %}
     </main>
 {% endblock %}

@@ -16,7 +16,16 @@
 
 import functools
 
-from flask import Blueprint, g, render_template, redirect, request, url_for, session
+from flask import (
+    Blueprint,
+    current_app,
+    g,
+    render_template,
+    redirect,
+    request,
+    url_for,
+    session,
+)
 from werkzeug.local import LocalProxy
 
 from .models import User
@@ -49,7 +58,7 @@ def get_user():
         session_id = session.get("user_id")
         if session_id:
             try:
-                g.user = User.query.get(session_id)
+                g.user = current_app.Session.query(User).get(session_id)
             except:
                 g.user = NullUser()
         else:
@@ -70,7 +79,7 @@ auth_bp = Blueprint("auth", __name__)
 def login():
     if request.method == "POST":
         ident = request.form.get("ident")
-        user = User.query.filter_by(email=ident).first()
+        user = current_app.Session.query(User).filter_by(email=ident).first()
         if user:
             session["user_id"] = user.id
             return redirect(url_for("index"))

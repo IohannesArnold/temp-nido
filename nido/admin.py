@@ -14,10 +14,19 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, abort, flash, render_template, redirect, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    flash,
+    render_template,
+    redirect,
+    request,
+    url_for,
+)
 from .auth import login_required, current_user
 
-from .models import db, User, Position, Authorization
+from .models import User, Position, Authorization
 from .main_menu import MenuLink
 
 admin_bp = Blueprint("admin", __name__)
@@ -50,13 +59,13 @@ def edit_positions():
 def edit_positions_post():
     delete_id = request.form.get("delete_id")
     if delete_id:
-        delend = db.session.get(Position, int(delete_id))
+        delend = current_app.Session.get(Position, int(delete_id))
         if delend.authorization.parent_id is None:
             pass
         elif current_user not in delend.members:
             pass
         else:
-            db.session.delete(delend)
+            current_app.Session.delete(delend)
     return redirect(url_for(".edit_positions"))
 
 
@@ -76,9 +85,9 @@ def edit_authorizations():
 def edit_authorizations_post():
     delete_id = request.form.get("delete_id")
     if delete_id:
-        delend = db.session.get(Authorization, int(delete_id))
+        delend = current_app.Session.get(Authorization, int(delete_id))
         if delend.parent_id is None:
             pass
         else:
-            db.session.delete(delend)
+            current_app.Session.delete(delend)
     return redirect(url_for(".edit_authorizations"))

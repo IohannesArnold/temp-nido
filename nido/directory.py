@@ -14,10 +14,11 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, render_template, request
+from flask import Blueprint, current_app, render_template, request
+from sqlalchemy.orm import joinedload
 from .auth import login_required, current_user
 
-from .models import db, Residence, User
+from .models import Residence, User
 
 directory_bp = Blueprint("directory", __name__)
 
@@ -25,32 +26,32 @@ directory_bp = Blueprint("directory", __name__)
 @directory_bp.route("/")
 @login_required
 def root():
-    hide = request.args.get("hide_vacant")
+    hide = request.args.get("hide_vacant", False)
     try:
         page = int(request.args.get("p"))
     except:
-        page = None
+        page = 0
 
     show_street = (
-        db.session.query(Residence.street)
+        current_app.Session.query(Residence.street)
         .filter_by(community_id=current_user.community_id)
         .distinct()
         .count()
         != 1
     )
-    q_opts = db.joinedload(Residence.occupants)
-
-    listings = Residence.query.options(q_opts).filter_by(
-        community_id=current_user.community_id
+    listings = (
+        current_app.Session.query(Residence)
+        .options(joinedload(Residence.occupants, innerjoin=hide))
+        .filter_by(community_id=current_user.community_id)
+        .order_by(Residence.unit_no)
+        .limit(15)
+        .offset(15 * page)
+        .all()
     )
-    if hide:
-        # TODO figure out how to filter units without occupants
-        pass
-
-    listings = listings.paginate(page=page, max_per_page=15)
     return render_template(
         "directory.html",
-        listings_page=listings,
+        listings=listings,
+        page=page,
         show_street=show_street,
         hide_vacant=hide,
     )

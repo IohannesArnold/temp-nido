@@ -14,65 +14,74 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy import case
-from sqlalchemy.orm import validates
+from flask import current_app
+from sqlalchemy import Column, ForeignKey, Table
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.ext.hybrid import hybrid_property
+import sqlalchemy.orm as orm
+import sqlalchemy.types as sql_types
+import sqlalchemy.schema as sql_schema
+import sqlalchemy.sql.expression as sql_expr
 
 import enum
 import datetime
 import decimal
 
-db = SQLAlchemy()
+Base = declarative_base()
 
 
-class Community(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+class Community(Base):
+    __tablename__ = "community"
 
-    name = db.Column(db.String(120), nullable=False)
-    country = db.Column(db.String(80), nullable=False)
+    id = Column(sql_types.Integer, primary_key=True)
 
-    residences = db.relationship(
-        "Residence", lazy=True, backref=db.backref("community", lazy=True)
+    name = Column(sql_types.String(120), nullable=False)
+    country = Column(sql_types.String(80), nullable=False)
+
+    residences = orm.relationship(
+        "Residence", lazy=True, backref=orm.backref("community", lazy=True)
     )
-    members = db.relationship(
-        "User", lazy=True, backref=db.backref("community", lazy=True)
+    members = orm.relationship(
+        "User", lazy=True, backref=orm.backref("community", lazy=True)
     )
-    positions = db.relationship(
-        "Position", lazy=True, backref=db.backref("community", lazy=True)
+    positions = orm.relationship(
+        "Position", lazy=True, backref=orm.backref("community", lazy=True)
     )
-    abilities = db.relationship(
-        "Authorization", lazy=True, backref=db.backref("community", lazy=True)
+    abilities = orm.relationship(
+        "Authorization", lazy=True, backref=orm.backref("community", lazy=True)
     )
 
     def __repr__(self):
         return f"Community(name={self.name}, country={self.country})"
 
 
-class Residence(db.Model):
-    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+class Residence(Base):
+    __tablename__ = "residence"
+    __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
 
-    id = db.Column(db.Integer, primary_key=True)
-    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    id = Column(sql_types.Integer, primary_key=True)
+    community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
 
-    unit_no = db.Column(db.String(40))
-    street = db.Column(db.String(80), nullable=False)
-    locality = db.Column(db.String(40), nullable=False)
-    postcode = db.Column(db.String(20), nullable=False)
-    region = db.Column(db.String(40), nullable=False)
-    ownership_stake = db.Column(db.Numeric(3, 10))
+    unit_no = Column(sql_types.String(40))
+    street = Column(sql_types.String(80), nullable=False)
+    locality = Column(sql_types.String(40), nullable=False)
+    postcode = Column(sql_types.String(20), nullable=False)
+    region = Column(sql_types.String(40), nullable=False)
+    ownership_stake = Column(sql_types.Numeric(3, 10))
 
-    occupants = db.relationship(
+    occupants = orm.relationship(
         "User",
         secondary="residence_occupancy",
         lazy=True,
-        backref=db.backref("residences", lazy=True),
+        backref=orm.backref("residences", lazy=True),
     )
-    residence_charges = db.relationship(
-        "BillingCharge", lazy=True, backref=db.backref("charged_residence", lazy=True)
+    residence_charges = orm.relationship(
+        "BillingCharge", lazy=True, backref=orm.backref("charged_residence", lazy=True)
     )
-    recurring_charges = db.relationship(
-        "RecurringCharge", lazy=True, backref=db.backref("charged_residence", lazy=True)
+    recurring_charges = orm.relationship(
+        "RecurringCharge",
+        lazy=True,
+        backref=orm.backref("charged_residence", lazy=True),
     )
 
     def __repr__(self):
@@ -87,71 +96,74 @@ class Residence(db.Model):
         )
 
 
-class ResidenceOccupancy(db.Model):
+class ResidenceOccupancy(Base):
+    __tablename__ = "residence_occupancy"
     __table_args__ = (
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["user_id", "u_community_id"], ["user.id", "user.community_id"]
         ),
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["residence_id", "r_community_id"],
             ["residence.id", "residence.community_id"],
         ),
-        db.CheckConstraint("u_community_id = r_community_id"),
+        sql_schema.CheckConstraint("u_community_id = r_community_id"),
     )
 
-    residence_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    user_id = db.Column(db.Integer, nullable=False, primary_key=True)
-    r_community_id = db.Column(db.Integer, nullable=False)
-    u_community_id = db.Column(db.Integer, nullable=False)
-    relationship_name = db.Column(db.String(40), nullable=False, default="Occupant")
-    is_owner = db.Column(db.Boolean, nullable=False, default=False)
+    residence_id = Column(sql_types.Integer, nullable=False, primary_key=True)
+    user_id = Column(sql_types.Integer, nullable=False, primary_key=True)
+    r_community_id = Column(sql_types.Integer, nullable=False)
+    u_community_id = Column(sql_types.Integer, nullable=False)
+    relationship_name = Column(sql_types.String(40), nullable=False, default="Occupant")
+    is_owner = Column(sql_types.Boolean, nullable=False, default=False)
 
-    residence = db.relationship("Residence", lazy=True, viewonly=True)
-    user = db.relationship("User", lazy=True, viewonly=True)
+    residence = orm.relationship("Residence", lazy=True, viewonly=True)
+    user = orm.relationship("User", lazy=True, viewonly=True)
 
     def __repr__(self):
         return "ResidenceOccupancy()"
 
 
-user_positions = db.Table(
+user_positions = Table(
     "user_positions",
-    db.Column("user_id", db.Integer, db.ForeignKey("user.id"), primary_key=True),
-    db.Column(
-        "position_id", db.Integer, db.ForeignKey("position.id"), primary_key=True
+    Base.metadata,
+    Column("user_id", sql_types.Integer, ForeignKey("user.id"), primary_key=True),
+    Column(
+        "position_id", sql_types.Integer, ForeignKey("position.id"), primary_key=True
     ),
 )
 
 
-class Position(db.Model):
-    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+class Position(Base):
+    __tablename__ = "position"
+    __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
 
-    id = db.Column(db.Integer, primary_key=True)
-    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
-    authorization_id = db.Column(
-        db.Integer, db.ForeignKey("authorization.id"), nullable=False
+    id = Column(sql_types.Integer, primary_key=True)
+    community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
+    authorization_id = Column(
+        sql_types.Integer, ForeignKey("authorization.id"), nullable=False
     )
 
-    name = db.Column(db.String(80), nullable=False)
-    max_size = db.Column(db.Integer, nullable=True)
-    min_size = db.Column(db.Integer, nullable=True)
+    name = Column(sql_types.String(80), nullable=False)
+    max_size = Column(sql_types.Integer, nullable=True)
+    min_size = Column(sql_types.Integer, nullable=True)
 
-    members = db.relationship(
+    members = orm.relationship(
         "User",
         lazy=True,
         secondary=user_positions,
-        backref=db.backref("positions", lazy=True),
+        backref=orm.backref("positions", lazy=True),
     )
 
     def __repr__(self):
         return f"Position(" f"name={self.name}," f"max_size={self.max_size}" f")"
 
-    @validates("members", include_removes=True)
+    @orm.validates("members", include_removes=True)
     def validate_members(self, _key, member, is_remove):
         if (
             not is_remove
             and self.max_size
             and self.max_size
-            <= db.session.query(user_positions)
+            <= current_app.Session.query(user_positions)
             .filter_by(position_id=self.id)
             .distinct()
             .count()
@@ -162,7 +174,7 @@ class Position(db.Model):
             is_remove
             and self.min_size
             and self.min_size
-            >= db.session.query(user_positions)
+            >= current_app.Session.query(user_positions)
             .filter_by(position_id=self.id)
             .distinct()
             .count()
@@ -172,28 +184,29 @@ class Position(db.Model):
         return member
 
 
-class Authorization(db.Model):
-    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+class Authorization(Base):
+    __tablename__ = "authorization"
+    __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
 
-    id = db.Column(db.Integer, primary_key=True)
-    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
-    parent_id = db.Column(db.Integer, db.ForeignKey("authorization.id"))
+    id = Column(sql_types.Integer, primary_key=True)
+    community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
+    parent_id = Column(sql_types.Integer, ForeignKey("authorization.id"))
 
-    name = db.Column(db.String(80), nullable=False)
+    name = Column(sql_types.String(80), nullable=False)
 
-    positions = db.relationship(
+    positions = orm.relationship(
         "Position",
         lazy=True,
-        backref=db.backref("authorization", lazy=True),
+        backref=orm.backref("authorization", lazy=True),
     )
-    children = db.relationship(
+    children = orm.relationship(
         "Authorization",
         lazy=True,
-        backref=db.backref("parent", lazy=True, remote_side=[id]),
+        backref=orm.backref("parent", lazy=True, remote_side=[id]),
     )
 
     __mapper_args__ = {
-        "polymorphic_on": case(
+        "polymorphic_on": sql_expr.case(
             [
                 (parent_id == None, "root_authorization"),
             ],
@@ -219,22 +232,23 @@ class RootAuthorization(Authorization):
         return Authorization(name=name, parent=self)
 
 
-class User(db.Model):
-    __table_args__ = (db.UniqueConstraint("id", "community_id"),)
+class User(Base):
+    __tablename__ = "user"
+    __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
 
-    id = db.Column(db.Integer, primary_key=True)
-    community_id = db.Column(db.Integer, db.ForeignKey("community.id"), nullable=False)
+    id = Column(sql_types.Integer, primary_key=True)
+    community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
 
-    personal_name = db.Column(db.String(80), nullable=False)
-    family_name = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(80), unique=True)
-    phone = db.Column(db.String(40), unique=True)
+    personal_name = Column(sql_types.String(80), nullable=False)
+    family_name = Column(sql_types.String(80), nullable=False)
+    email = Column(sql_types.String(80), unique=True)
+    phone = Column(sql_types.String(40), unique=True)
 
-    er_contacts = db.relationship(
-        "EmergencyContact", lazy=True, backref=db.backref("user", lazy=True)
+    er_contacts = orm.relationship(
+        "EmergencyContact", lazy=True, backref=orm.backref("user", lazy=True)
     )
-    direct_charges = db.relationship(
-        "BillingCharge", lazy=True, backref=db.backref("charged_user", lazy=True)
+    direct_charges = orm.relationship(
+        "BillingCharge", lazy=True, backref=orm.backref("charged_user", lazy=True)
     )
 
     def __repr__(self):
@@ -252,7 +266,8 @@ class User(db.Model):
 
     def is_admin(self):
         return (
-            Position.query.filter_by(community_id=self.community_id)
+            current_app.Session.query(Position)
+            .filter_by(community_id=self.community_id)
             .join(user_positions)
             .filter_by(user_id=self.id)
             .join(Authorization)
@@ -261,15 +276,16 @@ class User(db.Model):
         )
 
 
-class EmergencyContact(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
-    personal_name = db.Column(db.String(80), nullable=False)
-    family_name = db.Column(db.String(80), nullable=False)
-    relation = db.Column(db.String(80), nullable=False)
-    email = db.Column(db.String(80))
-    phone = db.Column(db.String(40))
-    notes = db.Column(db.Text)
+class EmergencyContact(Base):
+    __tablename__ = "er_contact"
+    id = Column(sql_types.Integer, primary_key=True)
+    user_id = Column(sql_types.Integer, ForeignKey("user.id"), nullable=False)
+    personal_name = Column(sql_types.String(80), nullable=False)
+    family_name = Column(sql_types.String(80), nullable=False)
+    relation = Column(sql_types.String(80), nullable=False)
+    email = Column(sql_types.String(80))
+    phone = Column(sql_types.String(40))
+    notes = Column(sql_types.Text)
 
     def __repr__(self):
         return (
@@ -284,29 +300,30 @@ class EmergencyContact(db.Model):
         )
 
 
-class BillingCharge(db.Model):
+class BillingCharge(Base):
+    __tablename__ = "billing_charge"
     __table_args__ = (
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["user_id", "u_community_id"], ["user.id", "user.community_id"]
         ),
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["residence_id", "r_community_id"],
             ["residence.id", "residence.community_id"],
         ),
-        db.CheckConstraint("u_community_id = r_community_id"),
-        db.CheckConstraint("residence_id is null or user_id is null"),
+        sql_schema.CheckConstraint("u_community_id = r_community_id"),
+        sql_schema.CheckConstraint("residence_id is null or user_id is null"),
     )
-    id = db.Column(db.Integer, primary_key=True)
-    residence_id = db.Column(db.Integer, nullable=True)
-    user_id = db.Column(db.Integer, nullable=True)
-    r_community_id = db.Column(db.Integer, nullable=True)
-    u_community_id = db.Column(db.Integer, nullable=True)
+    id = Column(sql_types.Integer, primary_key=True)
+    residence_id = Column(sql_types.Integer, nullable=True)
+    user_id = Column(sql_types.Integer, nullable=True)
+    r_community_id = Column(sql_types.Integer, nullable=True)
+    u_community_id = Column(sql_types.Integer, nullable=True)
 
-    name = db.Column(db.String(200), nullable=False)
-    base_amount = db.Column(db.Integer, nullable=False)
-    paid = db.Column(db.Boolean, nullable=False)
-    charge_date = db.Column(db.Date, nullable=False)
-    due_date = db.Column(db.Date, nullable=False)
+    name = Column(sql_types.String(200), nullable=False)
+    base_amount = Column(sql_types.Integer, nullable=False)
+    paid = Column(sql_types.Boolean, nullable=False)
+    charge_date = Column(sql_types.Date, nullable=False)
+    due_date = Column(sql_types.Date, nullable=False)
 
     def __repr__(self):
         return (
@@ -334,30 +351,31 @@ class Frequency(enum.Enum):
     DAILY = 3
 
 
-class RecurringCharge(db.Model):
+class RecurringCharge(Base):
+    __tablename__ = "recurring_charge"
     __table_args__ = (
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["user_id", "u_community_id"], ["user.id", "user.community_id"]
         ),
-        db.ForeignKeyConstraint(
+        sql_schema.ForeignKeyConstraint(
             ["residence_id", "r_community_id"],
             ["residence.id", "residence.community_id"],
         ),
-        db.CheckConstraint("u_community_id = r_community_id"),
-        db.CheckConstraint("residence_id is null or user_id is null"),
+        sql_schema.CheckConstraint("u_community_id = r_community_id"),
+        sql_schema.CheckConstraint("residence_id is null or user_id is null"),
     )
-    id = db.Column(db.Integer, primary_key=True)
-    residence_id = db.Column(db.Integer, nullable=True)
-    user_id = db.Column(db.Integer, nullable=True)
-    r_community_id = db.Column(db.Integer, nullable=True)
-    u_community_id = db.Column(db.Integer, nullable=True)
+    id = Column(sql_types.Integer, primary_key=True)
+    residence_id = Column(sql_types.Integer, nullable=True)
+    user_id = Column(sql_types.Integer, nullable=True)
+    r_community_id = Column(sql_types.Integer, nullable=True)
+    u_community_id = Column(sql_types.Integer, nullable=True)
 
-    name = db.Column(db.String(200), nullable=False)
-    base_amount = db.Column(db.Integer, nullable=False)
-    frequency = db.Column(db.Enum(Frequency), nullable=False)
-    frequency_skip = db.Column(db.Integer, nullable=False, default=1)
-    grace_period = db.Column(db.Interval, nullable=False)
-    next_charge = db.Column(db.Date, nullable=False)
+    name = Column(sql_types.String(200), nullable=False)
+    base_amount = Column(sql_types.Integer, nullable=False)
+    frequency = Column(sql_types.Enum(Frequency), nullable=False)
+    frequency_skip = Column(sql_types.Integer, nullable=False, default=1)
+    grace_period = Column(sql_types.Interval, nullable=False)
+    next_charge = Column(sql_types.Date, nullable=False)
 
     def __repr__(self):
         return (

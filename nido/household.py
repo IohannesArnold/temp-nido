@@ -14,10 +14,18 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, abort, render_template, redirect, request, url_for
+from flask import (
+    Blueprint,
+    abort,
+    current_app,
+    render_template,
+    redirect,
+    request,
+    url_for,
+)
 from .auth import login_required, current_user
 
-from .models import db, Residence, ResidenceOccupancy, User
+from .models import Residence, ResidenceOccupancy, User
 
 bp = Blueprint("household", __name__)
 
@@ -26,7 +34,7 @@ bp = Blueprint("household", __name__)
 @login_required
 def root():
     occupancies = (
-        db.session.query(ResidenceOccupancy)
+        current_app.Session.query(ResidenceOccupancy)
         .join(Residence)
         .filter(
             ResidenceOccupancy.user_id == current_user.id,

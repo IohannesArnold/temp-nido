@@ -17,8 +17,10 @@
 import os
 
 from flask import Flask
+from sqlalchemy import create_engine
+from sqlalchemy.orm import scoped_session
+from sqlalchemy.orm import sessionmaker
 
-from .models import db, User
 from .main_menu import get_main_menu
 from .auth import auth_bp, current_user
 from .admin import admin_bp
@@ -59,7 +61,12 @@ def create_app(testing_config=None):
             },
         )
 
-    db.init_app(app)
+    db_engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    app.Session = scoped_session(sessionmaker(bind=db_engine))
+
+    @app.teardown_appcontext
+    def end_db_session(response):
+        app.Session.remove()
 
     app.jinja_env.globals.update(get_main_menu=get_main_menu)
     app.jinja_env.globals.update(current_user=current_user)
