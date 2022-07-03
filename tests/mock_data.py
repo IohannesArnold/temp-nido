@@ -6,7 +6,12 @@ from nido.models import (
     Residence,
     Position,
     RootAuthorization,
+    BillingCharge,
+    Frequency,
+    RecurringCharge,
 )
+
+from datetime import date, timedelta
 
 community_arr = [
     Community(name="Rolfson-Durgan", country="United States"),
@@ -84,14 +89,49 @@ omni = RootAuthorization(
 
 
 def seed_db(db):
+    two_weeks = timedelta(days=14)
 
     for a in residence_arr:
         a.community = community_arr[0]
+        billing_charge = BillingCharge(
+            name="Example Residence Charge",
+            base_amount=1000,
+            paid=False,
+            charge_date=date.today() - two_weeks,
+            due_date=date.today() + two_weeks,
+        )
+        recurring_charge = RecurringCharge(
+            name="Example Monthly Charge",
+            base_amount=1000,
+            frequency=Frequency.MONTHLY,
+            frequency_skip=1,
+            grace_period=timedelta(days=10),
+            next_charge=date.today().replace(day=1),
+        )
+        recurring_charge.next_charge = recurring_charge.find_next_date()
+        a.residence_charges.append(billing_charge)
+        a.recurring_charges.append(recurring_charge)
         db.session.add(a)
 
     for i, r in enumerate(resident_arr):
         r.community = community_arr[0]
         r.residences.append(residence_arr[i])
+        billing_charge = BillingCharge(
+            name="Example Personal Charge",
+            base_amount=50000,
+            paid=False,
+            charge_date=date.today() - two_weeks,
+            due_date=date.today() + two_weeks,
+        )
+        late_charge = BillingCharge(
+            name="Example Late Charge",
+            base_amount=1050,
+            paid=False,
+            charge_date=date.today() - two_weeks - two_weeks,
+            due_date=date.today() - two_weeks,
+        )
+        r.direct_charges.append(billing_charge)
+        r.direct_charges.append(late_charge)
         db.session.add(r)
 
     omni.community = community_arr[0]

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Billing{% endblock %}
+{% block body_id %}billing{% endblock %}
+{% block body %}
+  <main>
+    <h1>Billing</h1>
+    <h2>Current Charges</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Charge Date</th>
+        <th>Due Date</th>
+      </tr></thead>
+      {% for charge in current_charges %}
+      <tr>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.name -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.formatted_amount -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.charge_date -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.due_date -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h2>Recurring Charges</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Next Charge Date</th>
+      </tr></thead>
+      {% for charge in recurring_charges %}
+      <tr>
+        <td>{{charge.name}}</td>
+        <td>{{charge.formatted_amount}}</td>
+        <td>{{charge.next_charge}}</td>
+      </tr>
+      {% endfor %}
+    </table>
+  </main>
+{% endblock %}

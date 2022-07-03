@@ -29,6 +29,7 @@ def get_main_menu():
     menu_list = []
     menu_list.append(MenuLink("Dashboard", url_for("dash.dashboard")))
     menu_list.append(MenuLink("My Household", url_for("household.root")))
+    menu_list.append(MenuLink("Billing", "/billing/"))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
     menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
     if current_user.is_admin():

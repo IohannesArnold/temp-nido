@@ -17,6 +17,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import case
 from sqlalchemy.orm import validates
+from sqlalchemy.ext.hybrid import hybrid_property
+
+import enum
+import datetime
+import decimal
 
 db = SQLAlchemy()
 
@@ -62,6 +67,12 @@ class Residence(db.Model):
         secondary="residence_occupancy",
         lazy=True,
         backref=db.backref("residences", lazy=True),
+    )
+    residence_charges = db.relationship(
+        "BillingCharge", lazy=True, backref=db.backref("charged_residence", lazy=True)
+    )
+    recurring_charges = db.relationship(
+        "RecurringCharge", lazy=True, backref=db.backref("charged_residence", lazy=True)
     )
 
     def __repr__(self):
@@ -222,6 +233,9 @@ class User(db.Model):
     er_contacts = db.relationship(
         "EmergencyContact", lazy=True, backref=db.backref("user", lazy=True)
     )
+    direct_charges = db.relationship(
+        "BillingCharge", lazy=True, backref=db.backref("charged_user", lazy=True)
+    )
 
     def __repr__(self):
         return (
@@ -268,3 +282,122 @@ class EmergencyContact(db.Model):
             f"notes={self.notes}"
             f")"
         )
+
+
+class BillingCharge(db.Model):
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ["user_id", "u_community_id"], ["user.id", "user.community_id"]
+        ),
+        db.ForeignKeyConstraint(
+            ["residence_id", "r_community_id"],
+            ["residence.id", "residence.community_id"],
+        ),
+        db.CheckConstraint("u_community_id = r_community_id"),
+        db.CheckConstraint("residence_id is null or user_id is null"),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    residence_id = db.Column(db.Integer, nullable=True)
+    user_id = db.Column(db.Integer, nullable=True)
+    r_community_id = db.Column(db.Integer, nullable=True)
+    u_community_id = db.Column(db.Integer, nullable=True)
+
+    name = db.Column(db.String(200), nullable=False)
+    base_amount = db.Column(db.Integer, nullable=False)
+    paid = db.Column(db.Boolean, nullable=False)
+    charge_date = db.Column(db.Date, nullable=False)
+    due_date = db.Column(db.Date, nullable=False)
+
+    def __repr__(self):
+        return (
+            f"BillingCharge("
+            f"name={self.name},"
+            f"amount={self.amount},"
+            f"paid={self.paid},"
+            f"charge_date={self.charge_date},"
+            f"due_date={self.due_date},"
+            f")"
+        )
+
+    @hybrid_property
+    def amount(self):
+        return decimal.Decimal(".01") * self.base_amount
+
+    @property
+    def formatted_amount(self):
+        return f"${self.amount}"
+
+
+class Frequency(enum.Enum):
+    YEARLY = 1
+    MONTHLY = 2
+    DAILY = 3
+
+
+class RecurringCharge(db.Model):
+    __table_args__ = (
+        db.ForeignKeyConstraint(
+            ["user_id", "u_community_id"], ["user.id", "user.community_id"]
+        ),
+        db.ForeignKeyConstraint(
+            ["residence_id", "r_community_id"],
+            ["residence.id", "residence.community_id"],
+        ),
+        db.CheckConstraint("u_community_id = r_community_id"),
+        db.CheckConstraint("residence_id is null or user_id is null"),
+    )
+    id = db.Column(db.Integer, primary_key=True)
+    residence_id = db.Column(db.Integer, nullable=True)
+    user_id = db.Column(db.Integer, nullable=True)
+    r_community_id = db.Column(db.Integer, nullable=True)
+    u_community_id = db.Column(db.Integer, nullable=True)
+
+    name = db.Column(db.String(200), nullable=False)
+    base_amount = db.Column(db.Integer, nullable=False)
+    frequency = db.Column(db.Enum(Frequency), nullable=False)
+    frequency_skip = db.Column(db.Integer, nullable=False, default=1)
+    grace_period = db.Column(db.Interval, nullable=False)
+    next_charge = db.Column(db.Date, nullable=False)
+
+    def __repr__(self):
+        return (
+            f"RecurringCharge("
+            f"name={self.name},"
+            f"amount={self.amount},"
+            f"frequency={self.frequency},"
+            f"frequency_skip={self.frequency_skip},"
+            f"grace_period={self.grace_period},"
+            f"next_charge={self.next_charge},"
+            f")"
+        )
+
+    @hybrid_property
+    def amount(self):
+        return decimal.Decimal(".01") * self.base_amount
+
+    @property
+    def formatted_amount(self):
+        return f"${self.amount}"
+
+    def create_charge(self):
+        new_charge = BillingCharge(
+            name=self.name,
+            amount=self.amount,
+            paid=False,
+            charge_date=self.next_charge,
+            due_date=self.next_charge + self.grace_period,
+        )
+        return new_charge
+
+    def find_next_date(self):
+        if self.frequency == Frequency.YEARLY:
+            return self.next_charge.replace(
+                year=self.next_charge.year + self.frequency_skip
+            )
+        elif self.frequency == Frequency.MONTHLY:
+            next_month = self.next_charge.month + self.frequency_skip
+            return self.next_charge.replace(
+                year=self.next_charge.year + next_month // 12, month=next_month % 12
+            )
+        elif self.frequency == Frequency.DAILY:
+            return self.next_charge + datetime.timedelta(days=self.frequency_skip)
