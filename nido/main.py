@@ -71,6 +71,13 @@ def create_app(testing_config=None):
     def end_db_session(response):
         app.Session.remove()
 
+    try:
+        import redis
+
+        app.redis = redis.from_url(app.config["REDIS_URL"])
+    except:
+        app.redis = None
+
     app.jinja_env.globals.update(get_main_menu=get_main_menu)
     app.jinja_env.globals.update(current_user=current_user)
 
