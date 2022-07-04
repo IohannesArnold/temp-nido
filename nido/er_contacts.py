@@ -29,7 +29,7 @@ def root():
         delete_id = request.form.get("delete_id")
         if delete_id:
             delend = current_app.Session.query(EmergencyContact).get(int(delete_id))
-            if delend.user != current_user:
+            if delend.user_id != current_user.id:
                 abort(403)
             current_app.Session.delete(delend)
             current_app.Session.commit()
@@ -51,9 +51,14 @@ def root():
                 phone=phone,
                 email=email,
                 notes=notes,
-                user=current_user,
+                user_id=current_user.id,
             )
             current_app.Session.add(new_ec)
             current_app.Session.commit()
+    er_contacts = (
+        current_app.Session.query(EmergencyContact)
+        .filter_by(user_id=current_user.id)
+        .all()
+    )
 
-    return render_template("er_contacts.html")
+    return render_template("er_contacts.html", er_contacts=er_contacts)

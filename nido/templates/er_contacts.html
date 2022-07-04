@@ -5,7 +5,7 @@
     <main>
         <h1>Emergency Contacts</h1>
         <h2>Contacts on File</h2>
-        {% if current_user.er_contacts %}
+        {% if er_contacts %}
         <table>
             <thead><tr>
                 <th>Name</th>
@@ -15,7 +15,7 @@
                 <th>Notes</th>
                 <th></th>
             </tr></thead>
-            {% for contact in current_user.er_contacts %}
+            {% for contact in er_contacts %}
             <tr>
                 <td>{{contact.personal_name}} {{contact.family_name}}</td>
                 <td>{{contact.relation}}</td>
