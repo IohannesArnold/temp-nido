@@ -61,7 +61,10 @@ def create_app(testing_config=None):
             },
         )
 
-    db_engine = create_engine(app.config["SQLALCHEMY_DATABASE_URI"])
+    db_engine = create_engine(
+        app.config["DATABASE_URL"],
+        echo=app.config.get("LOG_SQL", app.env == "development"),
+    )
     app.Session = scoped_session(sessionmaker(bind=db_engine))
 
     @app.teardown_appcontext
