@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Hello {{current_user.personal_name}}{% endblock %}
+{% block title %}Hello {{personal_name}}{% endblock %}
 {% block body_id %}dashboard{% endblock %}
 {% block body %}
     <main>
-        <h1>Hello {{current_user.personal_name}}</h1>
+        <h1>Hello {{personal_name}}</h1>
         <h2>Quick links</h2>
         <ul>
             <li>Pay a bill</li>

@@ -23,7 +23,7 @@ from flask import (
     request,
     url_for,
 )
-from .auth import login_required, current_user
+from .auth import login_required, get_user_id
 
 from .models import Residence, ResidenceOccupancy, User
 
@@ -33,11 +33,12 @@ bp = Blueprint("household", __name__)
 @bp.route("/")
 @login_required
 def root():
+    current_user_id = get_user_id()
     occupancies = (
         current_app.Session.query(ResidenceOccupancy)
         .join(Residence)
         .filter(
-            ResidenceOccupancy.user_id == current_user.id,
+            ResidenceOccupancy.user_id == current_user_id,
         )
         .order_by(ResidenceOccupancy.is_owner.desc())
         .all()

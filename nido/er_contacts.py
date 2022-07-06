@@ -15,7 +15,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import Blueprint, abort, current_app, render_template, request
-from .auth import login_required, current_user
+from .auth import login_required, get_user_id
 
 from .models import EmergencyContact
 
@@ -25,11 +25,12 @@ er_bp = Blueprint("er_contacts", __name__)
 @er_bp.route("/", methods=["GET", "POST"])
 @login_required
 def root():
+    current_user_id = get_user_id()
     if request.method == "POST":
         delete_id = request.form.get("delete_id")
         if delete_id:
             delend = current_app.Session.query(EmergencyContact).get(int(delete_id))
-            if delend.user_id != current_user.id:
+            if delend.user_id != current_user_id:
                 abort(403)
             current_app.Session.delete(delend)
             current_app.Session.commit()
@@ -51,13 +52,13 @@ def root():
                 phone=phone,
                 email=email,
                 notes=notes,
-                user_id=current_user.id,
+                user_id=current_user_id,
             )
             current_app.Session.add(new_ec)
             current_app.Session.commit()
     er_contacts = (
         current_app.Session.query(EmergencyContact)
-        .filter_by(user_id=current_user.id)
+        .filter_by(user_id=current_user_id)
         .all()
     )
 

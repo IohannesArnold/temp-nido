@@ -28,20 +28,79 @@ from flask import (
 )
 from werkzeug.local import LocalProxy
 
-from .models import User, UserSession
+from .models import User, UserSession, Position, user_positions, Authorization
+
+
+## Create functions to get id of active user and community
+def get_user_id():
+    if "user_id" not in g:
+        try:
+            session_id = session["user_session_id"]
+        except:
+            return None
+        try:
+            redis_result = current_app.redis.get(f"user_session:{session_id}:user_id")
+        except:
+            redis_result = None
+
+        if redis_result is None:
+            (user_id, community_id) = (
+                current_app.Session.query(UserSession.user_id, UserSession.community_id)
+                .filter(UserSession.id == session["user_session_id"])
+                .one()
+            )
+            g.user_id = user_id
+            g.community_id = community_id
+            try:
+                current_app.redis.set(f"user_session:{session_id}:user_id", user_id)
+                current_app.redis.set(
+                    f"user_session:{session_id}:community_id", community_id
+                )
+            except:
+                pass
+        else:
+            g.user_id = int(redis_result)
+    return g.user_id
+
+
+def get_community_id():
+    if "community_id" not in g:
+        try:
+            session_id = session["user_session_id"]
+        except:
+            return None
+        try:
+            redis_result = current_app.redis.get(
+                f"user_session:{session_id}:community_id"
+            )
+        except:
+            redis_result = None
+
+        if redis_result is None:
+            (user_id, community_id) = (
+                current_app.Session.query(UserSession.user_id, UserSession.community_id)
+                .filter(UserSession.id == session["user_session_id"])
+                .one()
+            )
+            g.user_id = user_id
+            g.community_id = community_id
+            try:
+                current_app.redis.set(f"user_session:{session_id}:user_id", user_id)
+                current_app.redis.set(
+                    f"user_session:{session_id}:community_id", community_id
+                )
+            except:
+                pass
+        else:
+            g.community_id = int(redis_result)
+    return g.community_id
 
 
 ## Create login_required attribute
-
-
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        try:
-            current_app.Session.query(UserSession).filter_by(
-                id=session["user_session_id"]
-            ).one()
-        except:
+        if get_user_id() is None:
             session.pop("user_session_id", None)
             session["next"] = request.url
             return redirect(url_for("login"))
@@ -50,29 +109,17 @@ def login_required(view):
     return wrapped_view
 
 
-## Create 'current_user' function for insertion into templates
-
-
-class NullUser:
-    def is_authenticated(self):
-        return False
-
-
-def get_user():
-    if "user" not in g:
-        try:
-            g.user = (
-                current_app.Session.query(User)
-                .join(UserSession)
-                .filter(UserSession.id == session["user_session_id"])
-                .one()
-            )
-        except:
-            g.user = NullUser()
-    return g.user
-
-
-current_user = LocalProxy(lambda: get_user())
+## Create function to check if a giver user is an admin
+def is_admin(community_id, user_id):
+    return (
+        current_app.Session.query(Position)
+        .filter_by(community_id=community_id)
+        .join(user_positions)
+        .filter_by(user_id=user_id)
+        .join(Authorization)
+        .count()
+        > 0
+    )
 
 
 ## Create blueprint for auth pages

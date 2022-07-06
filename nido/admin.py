@@ -24,7 +24,7 @@ from flask import (
     request,
     url_for,
 )
-from .auth import login_required, current_user
+from .auth import login_required, get_user_id, get_community_id, is_admin
 
 from .models import User, Position, Authorization
 from .main_menu import MenuLink
@@ -35,7 +35,7 @@ admin_bp = Blueprint("admin", __name__)
 @admin_bp.route("/")
 @login_required
 def root():
-    if not current_user.is_admin():
+    if not is_admin(get_community_id(), get_user_id()):
         return abort(403)
     menu_list = []
     menu_list.append(MenuLink("Edit Community Positions", url_for(".edit_positions")))
@@ -48,9 +48,12 @@ def root():
 @admin_bp.route("/edit-positions")
 @login_required
 def edit_positions():
-    if not current_user.is_admin():
+    community_id = get_community_id()
+    if not is_admin(community_id, get_user_id()):
         return abort(403)
-    positions = Position.query.filter_by(community_id=current_user.community_id).all()
+    positions = (
+        current_app.Session.query(Position).filter_by(community_id=community_id).all()
+    )
     return render_template("edit-positions.html", positions=positions)
 
 
@@ -62,8 +65,6 @@ def edit_positions_post():
         delend = current_app.Session.get(Position, int(delete_id))
         if delend.authorization.parent_id is None:
             pass
-        elif current_user not in delend.members:
-            pass
         else:
             current_app.Session.delete(delend)
     return redirect(url_for(".edit_positions"))
@@ -72,11 +73,14 @@ def edit_positions_post():
 @admin_bp.route("/edit-authorizations")
 @login_required
 def edit_authorizations():
-    if not current_user.is_admin():
+    community_id = get_community_id()
+    if not is_admin(community_id, get_user_id()):
         return abort(403)
-    authorizations = Authorization.query.filter_by(
-        community_id=current_user.community_id
-    ).all()
+    authorizations = (
+        current_app.Session.query(Authorization)
+        .filter_by(community_id=community_id)
+        .all()
+    )
     return render_template("edit-authorizations.html", authorizations=authorizations)
 
 

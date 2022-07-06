@@ -15,7 +15,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import Blueprint, abort, current_app, render_template, request
-from .auth import login_required, current_user
+from .auth import login_required, get_user_id
 
 from .models import BillingCharge, ResidenceOccupancy, RecurringCharge
 
@@ -28,6 +28,7 @@ bill_bp = Blueprint("billing", __name__)
 @login_required
 def root():
     today = date.today()
+    current_user_id = get_user_id()
     current_charges = (
         current_app.Session.query(BillingCharge)
         .outerjoin(
@@ -35,9 +36,9 @@ def root():
             BillingCharge.residence_id == ResidenceOccupancy.residence_id,
         )
         .filter(
-            (BillingCharge.user_id == current_user.id)
+            (BillingCharge.user_id == current_user_id)
             | (
-                (ResidenceOccupancy.user_id == current_user.id)
+                (ResidenceOccupancy.user_id == current_user_id)
                 & (ResidenceOccupancy.is_owner == True)
             )
         )
@@ -55,9 +56,9 @@ def root():
             RecurringCharge.residence_id == ResidenceOccupancy.residence_id,
         )
         .filter(
-            (RecurringCharge.user_id == current_user.id)
+            (RecurringCharge.user_id == current_user_id)
             | (
-                (ResidenceOccupancy.user_id == current_user.id)
+                (ResidenceOccupancy.user_id == current_user_id)
                 & (ResidenceOccupancy.is_owner == True)
             )
         )

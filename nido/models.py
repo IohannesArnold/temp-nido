@@ -262,20 +262,6 @@ class User(Base):
             f")"
         )
 
-    def is_authenticated(self):
-        return True
-
-    def is_admin(self):
-        return (
-            current_app.Session.query(Position)
-            .filter_by(community_id=self.community_id)
-            .join(user_positions)
-            .filter_by(user_id=self.id)
-            .join(Authorization)
-            .count()
-            > 0
-        )
-
 
 class UserSession(Base):
     __tablename__ = "user_session"

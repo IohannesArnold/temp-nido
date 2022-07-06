@@ -14,8 +14,9 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import Blueprint, render_template, redirect, url_for
-from .auth import login_required
+from flask import Blueprint, current_app, render_template, redirect, url_for
+from .auth import login_required, get_user_id
+from .models import User
 
 dash_bp = Blueprint("dash", __name__)
 
@@ -29,4 +30,10 @@ def index():
 @dash_bp.route("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html")
+    current_user_id = get_user_id()
+    personal_name = (
+        current_app.Session.query(User.personal_name)
+        .filter_by(id=current_user_id)
+        .scalar()
+    )
+    return render_template("dashboard.html", personal_name=personal_name)

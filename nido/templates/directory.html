@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}{{current_user.community.name}} Directory{% endblock %}
+{% block title %}{{community_name}} Directory{% endblock %}
 {% block body_id %}directory{% endblock %}
 {% block body %}
     <main>
-        <h1>{{current_user.community.name}} Directory</h1>
+        <h1>{{community_name}} Directory</h1>
         <details>
             <summary>Display Options</summary>
             <form method="GET">

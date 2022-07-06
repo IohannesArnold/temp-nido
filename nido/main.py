@@ -22,7 +22,7 @@ from sqlalchemy.orm import scoped_session
 from sqlalchemy.orm import sessionmaker
 
 from .main_menu import get_main_menu
-from .auth import auth_bp, current_user
+from .auth import auth_bp
 from .admin import admin_bp
 from .billing import bill_bp
 from .dashboard import dash_bp
@@ -79,7 +79,6 @@ def create_app(testing_config=None):
         app.redis = None
 
     app.jinja_env.globals.update(get_main_menu=get_main_menu)
-    app.jinja_env.globals.update(current_user=current_user)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dash_bp)

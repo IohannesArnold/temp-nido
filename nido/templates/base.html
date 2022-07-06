@@ -10,7 +10,7 @@
     {% endblock %}
 </head>
 <body id="{% block body_id %}{% endblock %}">
-    {% if current_user.is_authenticated() %}
+    {% block main_menu %}
     <nav id="main_menu"><ul>
         {% for link in get_main_menu() recursive %}
         <li><a href="{{link.href}}">{{link.name}}</a></li>
@@ -19,7 +19,7 @@
             {% endif %}
         {% endfor %}
     </ul></nav>
-    {% endif %}
+    {% endblock %}
     {% block body %}{% endblock %}
 </body>
 </html>

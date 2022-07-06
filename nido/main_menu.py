@@ -15,7 +15,7 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import current_app, url_for
-from .auth import current_user
+from .auth import get_user_id, get_community_id, is_admin
 
 
 class MenuLink:
@@ -32,15 +32,20 @@ def get_main_menu():
     menu_list.append(MenuLink("Billing", "/billing/"))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
     menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
-    if current_app.redis and current_app.redis.exists(
-        f"user:{current_user.id}:is_admin"
-    ):
-        show_admin = current_app.redis.get(f"user:{current_user.id}:is_admin")
-    else:
-        show_admin = current_user.is_admin()
-    if current_app.redis:
-        current_app.redis.set(f"user:{current_user.id}:is_admin", int(show_admin))
-    if show_admin:
+    current_user_id = get_user_id()
+
+    try:
+        show_admin = current_app.redis.get(f"user:{current_user_id}:is_admin")
+    except:
+        show_admin = None
+    if show_admin is None:
+        show_admin = is_admin(get_community_id(), current_user_id)
+    try:
+        current_app.redis.set(f"user:{current_user_id}:is_admin", int(show_admin))
+    except:
+        pass
+
+    if bool(show_admin) == True:
         menu_list.append(MenuLink("Admin Center", url_for("admin.root")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list
