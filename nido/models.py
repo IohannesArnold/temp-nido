@@ -17,6 +17,7 @@
 from flask import current_app
 from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import func
 import sqlalchemy.orm as orm
 import sqlalchemy.types as sql_types
 import sqlalchemy.schema as sql_schema
@@ -247,6 +248,9 @@ class User(Base):
     direct_charges = orm.relationship(
         "BillingCharge", lazy=True, backref=orm.backref("charged_user", lazy=True)
     )
+    login_sessions = orm.relationship(
+        "UserSession", lazy=True, backref=orm.backref("user", lazy=True)
+    )
 
     def __repr__(self):
         return (
@@ -271,6 +275,22 @@ class User(Base):
             .count()
             > 0
         )
+
+
+class UserSession(Base):
+    __tablename__ = "user_session"
+    __table_args__ = (
+        sql_schema.ForeignKeyConstraint(
+            ["user_id", "community_id"], ["user.id", "user.community_id"]
+        ),
+    )
+
+    id = Column(sql_types.Integer, primary_key=True)
+    user_id = Column(sql_types.Integer, nullable=False)
+    community_id = Column(sql_types.Integer, nullable=False)
+    last_activity = Column(
+        sql_types.DateTime, nullable=False, server_default=func.now()
+    )
 
 
 class EmergencyContact(Base):

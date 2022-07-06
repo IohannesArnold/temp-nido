@@ -3,6 +3,7 @@ from nido.models import (
     EmergencyContact,
     Community,
     User,
+    UserSession,
     Residence,
     Position,
     RootAuthorization,
@@ -130,6 +131,8 @@ def seed_db(db_session):
             charge_date=date.today() - two_weeks - two_weeks,
             due_date=date.today() - two_weeks,
         )
+        user_session = UserSession(user=r)
+        db_session.add(user_session)
         r.direct_charges.append(billing_charge)
         r.direct_charges.append(late_charge)
         db_session.add(r)

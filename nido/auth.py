@@ -28,7 +28,7 @@ from flask import (
 )
 from werkzeug.local import LocalProxy
 
-from .models import User
+from .models import User, UserSession
 
 
 ## Create login_required attribute
@@ -37,7 +37,12 @@ from .models import User
 def login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if session.get("user_id") is None:
+        try:
+            current_app.Session.query(UserSession).filter_by(
+                id=session["user_session_id"]
+            ).one()
+        except:
+            session.pop("user_session_id", None)
             session["next"] = request.url
             return redirect(url_for("login"))
         return view(**kwargs)
@@ -55,13 +60,14 @@ class NullUser:
 
 def get_user():
     if "user" not in g:
-        session_id = session.get("user_id")
-        if session_id:
-            try:
-                g.user = current_app.Session.get(User, session_id)
-            except:
-                g.user = NullUser()
-        else:
+        try:
+            g.user = (
+                current_app.Session.query(User)
+                .join(UserSession)
+                .filter(UserSession.id == session["user_session_id"])
+                .one()
+            )
+        except:
             g.user = NullUser()
     return g.user
 
@@ -81,13 +87,25 @@ def login():
         ident = request.form.get("ident")
         user = current_app.Session.query(User).filter_by(email=ident).first()
         if user:
-            session["user_id"] = user.id
-            return redirect(url_for("index"))
+            new_session = UserSession(user=user)
+            current_app.Session.add(new_session)
+            current_app.Session.commit()
+            session["user_session_id"] = new_session.id
+            # The flask-login docs insist that you need to validate the next
+            # parameter, but that's for when it's a url query. Since here
+            # it's passed as a secure server-generated cookie, this should be fine.
+            next_url = session.pop("next", None)
+
+            return redirect(next_url or url_for("index"))
 
     return render_template("login.html")
 
 
 @auth_bp.route("/logout")
 def logout():
-    session.pop("user_id")
+    current_app.Session.query(UserSession).filter_by(
+        id=session["user_session_id"]
+    ).delete()
+    current_app.Session.commit()
+    session.pop("user_session_id")
     return redirect(url_for("login"))
