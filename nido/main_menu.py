@@ -35,7 +35,7 @@ def get_main_menu():
     current_user_id = get_user_id()
 
     try:
-        show_admin = current_app.redis.get(f"user:{current_user_id}:is_admin")
+        show_admin = int(current_app.redis.get(f"user:{current_user_id}:is_admin"))
     except:
         show_admin = None
     if show_admin is None:
@@ -45,7 +45,7 @@ def get_main_menu():
     except:
         pass
 
-    if bool(show_admin) == True:
+    if show_admin:
         menu_list.append(MenuLink("Admin Center", url_for("admin.root")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list

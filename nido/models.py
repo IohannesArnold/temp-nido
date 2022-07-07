@@ -269,9 +269,12 @@ class UserSession(Base):
         sql_schema.ForeignKeyConstraint(
             ["user_id", "community_id"], ["user.id", "user.community_id"]
         ),
+        {"sqlite_autoincrement": True},
     )
 
-    id = Column(sql_types.Integer, primary_key=True)
+    id = Column(
+        sql_types.Integer, sql_schema.Identity(start=100, cycle=True), primary_key=True
+    )
     user_id = Column(sql_types.Integer, nullable=False)
     community_id = Column(sql_types.Integer, nullable=False)
     last_activity = Column(

@@ -150,9 +150,9 @@ def login():
 
 @auth_bp.route("/logout")
 def logout():
-    current_app.Session.query(UserSession).filter_by(
-        id=session["user_session_id"]
-    ).delete()
+    session_id = session.pop("user_session_id")
+    current_app.Session.query(UserSession).filter_by(id=session_id).delete()
+    current_app.redis.delete(f"user_session:{session_id}:user_id")
+    current_app.redis.delete(f"user_session:{session_id}:community_id")
     current_app.Session.commit()
-    session.pop("user_session_id")
     return redirect(url_for("login"))
