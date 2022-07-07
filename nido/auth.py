@@ -143,7 +143,7 @@ def login():
             # it's passed as a secure server-generated cookie, this should be fine.
             next_url = session.pop("next", None)
 
-            return redirect(next_url or url_for("index"))
+            return redirect(next_url or url_for("household.root"))
 
     return render_template("login.html")
 

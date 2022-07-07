@@ -7,4 +7,4 @@ def test_user_login(client):
     response = client.post(
         "/login", data={"ident": "rthom0@com.com"}, follow_redirects=True
     )
-    assert b"Hello Rudd" in response.data
+    assert b"Rudd Thom" in response.data

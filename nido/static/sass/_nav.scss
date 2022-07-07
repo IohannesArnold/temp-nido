@@ -88,10 +88,6 @@ nav#main_menu {
       content: url('/static/icons/link.svg');
     }
 
-    &[href="/dashboard"]:before {
-      content: url('/static/icons/dashboard.svg');
-    }
-
     &[href="/my-household/"]:before {
       content: url('/static/icons/household.svg');
     }
