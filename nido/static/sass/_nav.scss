@@ -7,6 +7,11 @@ body:not(#login) main {
   @media(max-width:699px) {
     margin-left: 50px;
   }
+
+  @media print {
+    margin-left: 0;
+  }
+  
 }
 
 input#main_menu_toggle {
@@ -46,12 +51,18 @@ nav#main_menu {
   @media(max-width:699px) {
     width: 50px;
   }
+
+  @media print {
+    display: none;
+  }
   
   ul {
     display: block;
     padding: 0;
     margin: 0;
     list-style: none;
+    height: calc(100% - 50px);
+    overflow-y: scroll;
   }
 
   ul li {
@@ -63,18 +74,10 @@ nav#main_menu {
     height: 50px;
   }
 
-  > ul > li:last-child {
-      position: absolute;
-      left: 0;
-      bottom: 0;
-  }
-
   a, label {
     color: rgba(255,255,255,0.9);
     text-decoration: none;
     font-size: 1.5rem;
-    padding: 15px 12px;
-    position: relative;
     display:block;
 
     &:hover{
@@ -83,9 +86,11 @@ nav#main_menu {
 
     &:before {
       display: inline-block;
-      vertical-align: middle;
-      padding-right: 10px;
       content: url('/static/icons/link.svg');
+      width: 25px;
+      height: 25px;
+      padding: 12.5px 10px 12.5px 12.5px;
+      vertical-align: middle;
     }
 
     &[href="/my-household/"]:before {
@@ -117,4 +122,10 @@ nav#main_menu {
     }
   }
 
+  label[for="main_menu_toggle"] {
+    box-sizing: border-box;
+    &:before {
+      content: url('/static/icons/lr-arrows.svg');
+    }
+  }
 }

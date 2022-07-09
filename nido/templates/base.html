@@ -11,14 +11,18 @@
 </head>
 <body id="{% block body_id %}{% endblock %}">
     {% block main_menu %}
-    <nav id="main_menu"><ul>
+    <input id="main_menu_toggle" type="checkbox"/>
+    <nav id="main_menu">
+        <ul>
         {% for link in get_main_menu() recursive %}
         <li><a href="{{link.href}}">{{link.name}}</a></li>
             {% if link.submenu %}
             <ul>{{loop(link.submenu)}}</ul>
             {% endif %}
         {% endfor %}
-    </ul></nav>
+        </ul>
+        <label for="main_menu_toggle">Colapse/Expand Menu</label>
+    </nav>
     {% endblock %}
     {% block body %}{% endblock %}
 </body>
