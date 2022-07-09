@@ -96,6 +96,10 @@ nav#main_menu {
       content: url('/static/icons/billing.svg');
     }
 
+    &[href="/report-issue/"]:before {
+      content: url('/static/icons/issue.svg');
+    }
+
     &[href="/directory/"]:before {
       content: url('/static/icons/contacts.svg');
     }

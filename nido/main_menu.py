@@ -29,6 +29,7 @@ def get_main_menu():
     menu_list = []
     menu_list.append(MenuLink("My Household", url_for("household.root")))
     menu_list.append(MenuLink("Billing", "/billing/"))
+    menu_list.append(MenuLink("Report Issue", url_for("issue.root")))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
     menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
     current_user_id = get_user_id()

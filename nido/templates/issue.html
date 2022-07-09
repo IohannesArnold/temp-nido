@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Report An Issue{% endblock %}
+{% block body_id %}report-issue{% endblock %}
+{% block body %}
+  <main>
+    <h1>Report An Issue</h1>
+    {% if custom_form %}
+      {{ custom_form }}
+    {% else %}
+      <form method="post">
+        <label>Issue Subject:<input name="issue_subject" required></label>
+        <label>Details:<textarea name="issue_body" required></textarea></label>
+        <button>Submit</button>
+      </form>
+    {% endif %}
+  </main>
+{% endblock %}

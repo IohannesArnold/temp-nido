@@ -37,6 +37,8 @@ class Community(Base):
 
     name = Column(sql_types.String(120), nullable=False)
     country = Column(sql_types.String(80), nullable=False)
+    issue_handler = Column(sql_types.String(20))
+    issue_config = Column(sql_types.JSON())
 
     residences = orm.relationship(
         "Residence", lazy=True, backref=orm.backref("community", lazy=True)
@@ -53,6 +55,23 @@ class Community(Base):
 
     def __repr__(self):
         return f"Community(name={self.name}, country={self.country})"
+
+
+class IssueHandler(Base):
+    __table__ = Community.__table__
+    __mapper_args__ = {
+        "include_properties": ["id", "issue_handler", "issue_config"],
+        "polymorphic_on": "issue_handler",
+    }
+
+    def issue_categories(self):
+        return None
+
+    def custom_submit_form(self):
+        return None
+
+    def handle_new_submission(self, issue_subject, issue_body, issue_category=None):
+        pass
 
 
 class Residence(Base):

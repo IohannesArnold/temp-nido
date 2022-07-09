@@ -28,6 +28,7 @@ from .billing import bill_bp
 from .directory import directory_bp
 from .er_contacts import er_bp
 from .household import bp as house_bp, root as house_root
+from .issue import issue_bp
 
 
 def create_app(testing_config=None):
@@ -85,6 +86,7 @@ def create_app(testing_config=None):
     app.register_blueprint(directory_bp, url_prefix="/directory")
     app.register_blueprint(er_bp, url_prefix="/emergency-contacts")
     app.register_blueprint(house_bp, url_prefix="/my-household")
+    app.register_blueprint(issue_bp, url_prefix="/report-issue")
     app.add_url_rule("/login", endpoint="login")
     app.add_url_rule("/logout", endpoint="logout")
     app.add_url_rule("/", view_func=house_root)
