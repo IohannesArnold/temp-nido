@@ -27,6 +27,8 @@ import enum
 import datetime
 import decimal
 
+from .permissions import Permissions
+
 
 class SqliteSafeDecimal(sql_types.TypeDecorator):
     impl = sql_types.TypeEngine
@@ -60,6 +62,31 @@ class SqliteSafeDecimal(sql_types.TypeDecorator):
             return decimal.Decimal(value)
         else:
             return value
+
+
+class BooleanFlag(sql_types.TypeDecorator):
+    impl = sql_types.Boolean
+
+    def __init__(self, true_flag, false_flag, *arg, **kw):
+        self.true_flag = true_flag
+        self.false_flag = false_flag
+        sql_types.TypeDecorator.__init__(self, *arg, **kw)
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        try:
+            return value & self.true_flag == self.true_flag
+        except:
+            return value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        elif value:
+            return self.true_flag
+        else:
+            return self.false_flag
 
 
 Base = orm.declarative_base()
@@ -240,13 +267,52 @@ class Position(Base):
 
 class Authorization(Base):
     __tablename__ = "authorization"
-    __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
+    __table_args__ = (
+        sql_schema.UniqueConstraint("id", "community_id"),
+        sql_schema.ForeignKeyConstraint(
+            ["parent_id", "community_id"],
+            ["authorization.id", "authorization.community_id"],
+        ),
+    )
 
     id = Column(sql_types.Integer, primary_key=True)
     community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
-    parent_id = Column(sql_types.Integer, ForeignKey("authorization.id"))
+    parent_id = Column(sql_types.Integer)
 
     name = Column(sql_types.String(80), nullable=False)
+    can_delegate = Column(
+        BooleanFlag(Permissions.CAN_DELEGATE, Permissions.NONE),
+        nullable=False,
+        default=False,
+    )
+    modify_billing = Column(
+        BooleanFlag(Permissions.MODIFY_BILLING_SETTINGS, Permissions.NONE),
+        nullable=False,
+        default=False,
+    )
+    modify_issues = Column(
+        BooleanFlag(Permissions.MODIFY_ISSUE_SETTINGS, Permissions.NONE),
+        nullable=False,
+        default=False,
+    )
+    read_er = Column(
+        BooleanFlag(Permissions.READ_ER_CONTACTS, Permissions.NONE),
+        nullable=False,
+        default=False,
+    )
+
+    @hybrid_property
+    def permissions(self):
+        return (
+            self.can_delegate | self.modify_billing | self.modify_issues | self.read_er
+        )
+
+    @permissions.setter
+    def permissions(self, value):
+        self.can_delegate = value & Permissions.CAN_DELEGATE
+        self.modify_billing = value & Permissions.MODIFY_BILLING_SETTINGS
+        self.modify_issues = value & Permissions.MODIFY_ISSUE_SETTINGS
+        self.read_er = value & Permissions.READ_ER_CONTACTS
 
     positions = orm.relationship(
         "Position",
@@ -256,7 +322,10 @@ class Authorization(Base):
     children = orm.relationship(
         "Authorization",
         lazy=True,
-        backref=orm.backref("parent", lazy=True, remote_side=[id]),
+        overlaps="abilities,community",
+        backref=orm.backref(
+            "parent", lazy=True, remote_side=[id], overlaps="abilities,community"
+        ),
     )
 
     __mapper_args__ = {
@@ -270,8 +339,14 @@ class Authorization(Base):
     def __repr__(self):
         return f"Authorization(" f"name={self.name}" f")"
 
-    def permits(self):
-        return False
+    def permits(self, request):
+        return self.permissions & request == request
+
+    def delegate(self, name, permissions):
+        if self.can_delegate and permissions & self.permissions == permissions:
+            return Authorization(name=name, parent=self, permissions=permissions)
+        else:
+            raise Exception
 
 
 class RootAuthorization(Authorization):
@@ -280,8 +355,8 @@ class RootAuthorization(Authorization):
     def permits(self):
         return True
 
-    def delegate(self, name):
-        return Authorization(name=name, parent=self)
+    def delegate(self, name, permissions):
+        return Authorization(name=name, parent=self, permissions=permissions)
 
 
 class User(Base):

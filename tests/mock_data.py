@@ -11,6 +11,7 @@ from nido.models import (
     Frequency,
     RecurringCharge,
 )
+from nido.permissions import Permissions
 
 from datetime import date, timedelta
 
@@ -82,12 +83,6 @@ er_arr = [
     )
 ]
 
-pos_arr = [Position(name="President", min_size=1, max_size=1)]
-
-omni = RootAuthorization(
-    name="Omnipotent",
-)
-
 
 def seed_db(db_session):
     two_weeks = timedelta(days=14)
@@ -114,9 +109,24 @@ def seed_db(db_session):
         a.recurring_charges.append(recurring_charge)
         db_session.add(a)
 
+    omni = RootAuthorization(name="Omnipotent", community=community_arr[0])
+    db_session.add(omni)
+    board = Position(
+        name="Board of Directors",
+        min_size=1,
+        max_size=3,
+        authorization=omni,
+        community=community_arr[0],
+    )
+    db_session.add(board)
+
     for i, r in enumerate(resident_arr):
         r.community = community_arr[0]
         r.residences.append(residence_arr[i])
+
+        if i < 3:
+            board.members.append(r)
+
         billing_charge = BillingCharge(
             name="Example Personal Charge",
             base_amount=50000,
@@ -137,13 +147,16 @@ def seed_db(db_session):
         r.direct_charges.append(late_charge)
         db_session.add(r)
 
-    omni.community = community_arr[0]
-
-    for p in pos_arr:
-        p.community = community_arr[0]
-        p.authorization = omni
-        p.members.append(resident_arr[0])
-        db_session.add(p)
+    sys_admin = omni.delegate("Sys Admin", Permissions.MODIFY_BILLING_SETTINGS)
+    prez = Position(
+        name="President",
+        community=community_arr[0],
+        min_size=1,
+        max_size=1,
+        authorization=sys_admin,
+    )
+    prez.members.append(resident_arr[0])
+    db_session.add(prez)
 
     er_arr[0].user = resident_arr[0]
     db_session.add(er_arr[0])
