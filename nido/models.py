@@ -27,6 +27,41 @@ import enum
 import datetime
 import decimal
 
+
+class SqliteSafeDecimal(sql_types.TypeDecorator):
+    impl = sql_types.TypeEngine
+
+    def __init__(self, precision=18, scale=15, *arg, **kw):
+        self.precision = precision
+        self.scale = scale
+        sql_types.TypeDecorator.__init__(self, *arg, **kw)
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "sqlite":
+            # Precision + 1 to include the decimal point
+            return dialect.type_descriptor(sql_types.String(self.precision + 1))
+        else:
+            return dialect.type_descriptor(
+                sql_types.Numeric(precision=self.precision, scale=self.scale)
+            )
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == "sqlite":
+            return str(value)
+        else:
+            return value
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return value
+        elif dialect.name == "sqlite":
+            return decimal.Decimal(value)
+        else:
+            return value
+
+
 Base = orm.declarative_base()
 
 
@@ -86,7 +121,7 @@ class Residence(Base):
     locality = Column(sql_types.String(40), nullable=False)
     postcode = Column(sql_types.String(20), nullable=False)
     region = Column(sql_types.String(40), nullable=False)
-    ownership_stake = Column(sql_types.Numeric(3, 10))
+    ownership_stake = Column(SqliteSafeDecimal)
 
     occupants = orm.relationship(
         "User",
