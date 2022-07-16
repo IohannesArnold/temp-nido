@@ -152,7 +152,10 @@ def login():
 def logout():
     session_id = session.pop("user_session_id")
     current_app.Session.query(UserSession).filter_by(id=session_id).delete()
-    current_app.redis.delete(f"user_session:{session_id}:user_id")
-    current_app.redis.delete(f"user_session:{session_id}:community_id")
+    try:
+        current_app.redis.delete(f"user_session:{session_id}:user_id")
+        current_app.redis.delete(f"user_session:{session_id}:community_id")
+    except:
+        pass
     current_app.Session.commit()
     return redirect(url_for("login"))
