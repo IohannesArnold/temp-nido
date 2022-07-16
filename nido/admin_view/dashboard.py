@@ -15,25 +15,18 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import Blueprint, current_app, render_template, redirect, url_for
-from .auth import login_required, get_user_id
-from .models import User
+from nido.auth import login_required, get_community_id
+from nido.models import Community
+from nido.main_menu import admin_menu
 
 dash_bp = Blueprint("dash", __name__)
-
-
-@dash_bp.route("/")
-@login_required
-def index():
-    return redirect(url_for(".dashboard"))
 
 
 @dash_bp.route("/dashboard")
 @login_required
 def dashboard():
-    current_user_id = get_user_id()
-    personal_name = (
-        current_app.Session.query(User.personal_name)
-        .filter_by(id=current_user_id)
-        .scalar()
+    community_id = get_community_id()
+    community_name = (
+        current_app.Session.query(Community.name).filter_by(id=community_id).scalar()
     )
-    return render_template("dashboard.html", personal_name=personal_name)
+    return render_template("dashboard.html", community_name=community_name)

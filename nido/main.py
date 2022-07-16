@@ -23,7 +23,7 @@ from sqlalchemy.orm import sessionmaker
 
 from .main_menu import get_main_menu
 from .auth import auth_bp
-from .admin import admin_bp
+from .admin_view import admin_bp
 from .billing import bill_bp
 from .directory import directory_bp
 from .er_contacts import er_bp
@@ -81,14 +81,16 @@ def create_app(testing_config=None):
     app.jinja_env.globals.update(get_main_menu=get_main_menu)
 
     app.register_blueprint(auth_bp)
-    app.register_blueprint(admin_bp, url_prefix="/admin")
     app.register_blueprint(bill_bp, url_prefix="/billing")
     app.register_blueprint(directory_bp, url_prefix="/directory")
     app.register_blueprint(er_bp, url_prefix="/emergency-contacts")
     app.register_blueprint(house_bp, url_prefix="/my-household")
     app.register_blueprint(issue_bp, url_prefix="/report-issue")
+
+    app.register_blueprint(admin_bp, url_prefix="/admin")
+
     app.add_url_rule("/login", endpoint="login")
     app.add_url_rule("/logout", endpoint="logout")
-    app.add_url_rule("/", view_func=house_root)
+    app.add_url_rule("/", endpoint="index", view_func=house_root)
 
     return app

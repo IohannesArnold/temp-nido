@@ -25,11 +25,11 @@ from flask import (
     url_for,
 )
 from sqlalchemy.orm import load_only, selectinload
-from .auth import login_required, get_user_id, get_community_id, is_admin
+from nido.auth import login_required, get_user_id, get_community_id, is_admin
 
-from .models import User, Position, Authorization, user_positions
-from .permissions import Permissions
-from .main_menu import MenuLink
+from nido.models import User, Position, Authorization, user_positions
+from nido.permissions import Permissions
+from nido.main_menu import MenuLink
 
 from functools import reduce
 
@@ -51,49 +51,10 @@ def check_edit_auth_allowed(auth_id):
     )
 
 
-admin_bp = Blueprint("admin", __name__)
+bp = Blueprint("authorizations", __name__)
 
 
-@admin_bp.route("/")
-@login_required
-def root():
-    if not is_admin(get_community_id(), get_user_id()):
-        return abort(403)
-    menu_list = []
-    menu_list.append(MenuLink("Edit Community Positions", url_for(".edit_positions")))
-    menu_list.append(
-        MenuLink("Edit Position Authorzations", url_for(".edit_authorizations"))
-    )
-    return render_template("admin.html", menu_list=menu_list)
-
-
-@admin_bp.route("/edit-positions")
-@login_required
-def edit_positions():
-    community_id = get_community_id()
-    if not is_admin(community_id, get_user_id()):
-        return abort(403)
-    positions = (
-        current_app.Session.query(Position).filter_by(community_id=community_id).all()
-    )
-    return render_template("edit-positions.html", positions=positions)
-
-
-@admin_bp.post("/edit-positions")
-@login_required
-def edit_positions_post():
-    delete_id = request.form.get("delete_id")
-    if delete_id:
-        delend = current_app.Session.get(Position, int(delete_id))
-        if delend.authorization.parent_id is None:
-            pass
-        else:
-            current_app.Session.delete(delend)
-            current_app.Session.commit()
-    return redirect(url_for(".edit_positions"))
-
-
-@admin_bp.route("/edit-authorizations")
+@bp.route("/edit-authorizations")
 @login_required
 def edit_authorizations():
     community_id = get_community_id()
@@ -122,7 +83,7 @@ def edit_authorizations():
     )
 
 
-@admin_bp.post("/edit-authorizations/new")
+@bp.post("/edit-authorizations/new")
 @login_required
 def create_new_authorization():
     parent = current_app.Session.get(Authorization, request.form["parent_id"])
@@ -139,7 +100,7 @@ def create_new_authorization():
     return redirect(url_for(".edit_authorizations"))
 
 
-@admin_bp.route("/edit-authorizations/<int:auth_id>")
+@bp.route("/edit-authorizations/<int:auth_id>")
 @login_required
 def edit_single_authorization(auth_id):
     if not check_edit_auth_allowed(auth_id):
@@ -150,7 +111,7 @@ def edit_single_authorization(auth_id):
     )
 
 
-@admin_bp.post("/edit-authorizations/<int:auth_id>")
+@bp.post("/edit-authorizations/<int:auth_id>")
 @login_required
 def update_single_authorization(auth_id):
     if not check_edit_auth_allowed(auth_id):
@@ -164,7 +125,7 @@ def update_single_authorization(auth_id):
     return redirect(url_for(".edit_authorizations"))
 
 
-@admin_bp.post("/edit-authorizations/<int:auth_id>/delete")
+@bp.post("/edit-authorizations/<int:auth_id>/delete")
 @login_required
 def delete_authorization(auth_id):
     if not check_edit_auth_allowed(auth_id):

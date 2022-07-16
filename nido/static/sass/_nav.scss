@@ -117,6 +117,23 @@ nav#main_menu {
       content: url('/static/icons/admin.svg');
     }
 
+    &[href="/admin/dashboard"]:before {
+      content: url('/static/icons/dashboard.svg');
+    }
+
+    &[href="/admin/edit-authorizations"]:before {
+      content: url('/static/icons/key.svg');
+    }
+
+    &[href="/admin/edit-positions"]:before {
+      content: url('/static/icons/group.svg');
+    }
+
+    &[href="/"]:before {
+      content: url('/static/icons/user.svg');
+    }
+
+
     &[href="/logout"]:before {
       content: url('/static/icons/logout.svg');
     }

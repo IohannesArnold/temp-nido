@@ -14,7 +14,7 @@
 #  You should have received a copy of the GNU Affero General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-from flask import current_app, url_for
+from flask import current_app, request, url_for
 from .auth import get_user_id, get_community_id, is_admin
 
 
@@ -25,10 +25,24 @@ class MenuLink:
         self.submenu = submenu
 
 
-def get_main_menu():
+def admin_menu():
+    menu_list = []
+    menu_list.append(MenuLink("Dashboard", url_for("admin.dash.dashboard")))
+    menu_list.append(MenuLink("Edit Positions", url_for("admin.posit.edit_positions")))
+    menu_list.append(
+        MenuLink(
+            "Edit Authorizations", url_for("admin.authorizations.edit_authorizations")
+        )
+    )
+    menu_list.append(MenuLink("User View", url_for("index")))
+    menu_list.append(MenuLink("Logout", url_for("logout")))
+    return menu_list
+
+
+def user_menu():
     menu_list = []
     menu_list.append(MenuLink("My Household", url_for("household.root")))
-    menu_list.append(MenuLink("Billing", "/billing/"))
+    menu_list.append(MenuLink("Billing", url_for("billing.root")))
     menu_list.append(MenuLink("Report Issue", url_for("issue.root")))
     menu_list.append(MenuLink("Resident Directory", url_for("directory.root")))
     menu_list.append(MenuLink("Emergency Contacts", url_for("er_contacts.root")))
@@ -46,6 +60,13 @@ def get_main_menu():
         pass
 
     if show_admin:
-        menu_list.append(MenuLink("Admin Center", url_for("admin.root")))
+        menu_list.append(MenuLink("Admin View", url_for("admin.root")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list
+
+
+def get_main_menu():
+    if "admin" in request.path:
+        return admin_menu()
+    else:
+        return user_menu()
