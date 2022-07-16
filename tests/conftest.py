@@ -38,11 +38,6 @@ def db(app):
     Base.metadata.drop_all(bind=db_session.get_bind())
 
 
-@pytest.fixture()
-def client(app, db):
-    return app.test_client()
-
-
 @pytest.fixture(scope="function")
 def session(db):
     connection = db.get_bind().connect()
@@ -52,3 +47,9 @@ def session(db):
     )
     transaction.rollback()
     connection.close()
+
+
+@pytest.fixture(scope="function")
+def client(app, session):
+    app.Session = session
+    return app.test_client()
