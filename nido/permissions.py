@@ -18,7 +18,6 @@ from enum import Flag, auto
 
 
 class Permissions(Flag):
-    NONE = 0
     CAN_DELEGATE = auto()
     MODIFY_BILLING_SETTINGS = auto()
     MODIFY_ISSUE_SETTINGS = auto()

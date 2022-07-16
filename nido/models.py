@@ -26,6 +26,7 @@ import sqlalchemy.sql.expression as sql_expr
 import enum
 import datetime
 import decimal
+from functools import reduce
 
 from .permissions import Permissions
 
@@ -265,7 +266,34 @@ class Position(Base):
         return member
 
 
-class Authorization(Base):
+class PermissionsMixin(object):
+    pass
+
+
+for member in Permissions:
+
+    def make_closure(val):
+        def permission_default(context):
+            params = context.get_current_parameters()
+            if params["id"] == params["parent_id"]:
+                return val
+            else:
+                return Permissions(0)
+
+        return permission_default
+
+    setattr(
+        PermissionsMixin,
+        member.name,
+        Column(
+            BooleanFlag(member, Permissions(0)),
+            nullable=False,
+            default=make_closure(member),
+        ),
+    )
+
+
+class Authorization(Base, PermissionsMixin):
     __tablename__ = "authorization"
     __table_args__ = (
         sql_schema.UniqueConstraint("id", "community_id"),
@@ -277,42 +305,28 @@ class Authorization(Base):
 
     id = Column(sql_types.Integer, primary_key=True)
     community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
-    parent_id = Column(sql_types.Integer)
+    parent_id = Column(sql_types.Integer, nullable=False)
 
     name = Column(sql_types.String(80), nullable=False)
-    can_delegate = Column(
-        BooleanFlag(Permissions.CAN_DELEGATE, Permissions.NONE),
-        nullable=False,
-        default=False,
-    )
-    modify_billing = Column(
-        BooleanFlag(Permissions.MODIFY_BILLING_SETTINGS, Permissions.NONE),
-        nullable=False,
-        default=False,
-    )
-    modify_issues = Column(
-        BooleanFlag(Permissions.MODIFY_ISSUE_SETTINGS, Permissions.NONE),
-        nullable=False,
-        default=False,
-    )
-    read_er = Column(
-        BooleanFlag(Permissions.READ_ER_CONTACTS, Permissions.NONE),
-        nullable=False,
-        default=False,
-    )
 
     @hybrid_property
     def permissions(self):
-        return (
-            self.can_delegate | self.modify_billing | self.modify_issues | self.read_er
-        )
+        return reduce(lambda a, b: a | b, [getattr(self, m.name) for m in Permissions])
 
     @permissions.setter
     def permissions(self, value):
-        self.can_delegate = value & Permissions.CAN_DELEGATE
-        self.modify_billing = value & Permissions.MODIFY_BILLING_SETTINGS
-        self.modify_issues = value & Permissions.MODIFY_ISSUE_SETTINGS
-        self.read_er = value & Permissions.READ_ER_CONTACTS
+        for member in Permissions:
+            setattr(self, member.name, member & value)
+
+    @orm.validates(*[m.name for m in Permissions])
+    def validate_permissions(self, key, value):
+        parent_val = getattr(self.parent, key)
+        if self.parent.CAN_DELEGATE and value & parent_val == value:
+            return value
+        else:
+            raise Exception(
+                f"{self.name}.{key} cannot be changed to {value} because parent has {parent_val}"
+            )
 
     positions = orm.relationship(
         "Position",
@@ -330,7 +344,7 @@ class Authorization(Base):
 
     __mapper_args__ = {
         "polymorphic_on": sql_expr.case(
-            (parent_id == None, "root_authorization"),
+            (parent_id == id, "root_authorization"),
             else_="authorization",
         ),
         "polymorphic_identity": "authorization",
@@ -342,21 +356,30 @@ class Authorization(Base):
     def permits(self, request):
         return self.permissions & request == request
 
-    def delegate(self, name, permissions):
-        if self.can_delegate and permissions & self.permissions == permissions:
-            return Authorization(name=name, parent=self, permissions=permissions)
-        else:
-            raise Exception
+    def print_permissions(self):
+        out = ""
+        for member in Permissions:
+            if self.permits(member):
+                out += f"{member.name}, "
+        return out[:-2]
 
 
 class RootAuthorization(Authorization):
     __mapper_args__ = {"polymorphic_identity": "root_authorization"}
 
-    def permits(self):
+    @hybrid_property
+    def permissions(self):
+        return reduce(lambda a, b: a | b, [m for m in Permissions])
+
+    @permissions.setter
+    def permissions(self, value):
+        pass
+
+    def permits(self, _request):
         return True
 
-    def delegate(self, name, permissions):
-        return Authorization(name=name, parent=self, permissions=permissions)
+    def print_permissions(self):
+        return "All"
 
 
 class User(Base):

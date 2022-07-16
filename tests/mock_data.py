@@ -6,6 +6,7 @@ from nido.models import (
     UserSession,
     Residence,
     Position,
+    Authorization,
     RootAuthorization,
     BillingCharge,
     Frequency,
@@ -109,7 +110,7 @@ def seed_db(db_session):
         a.recurring_charges.append(recurring_charge)
         db_session.add(a)
 
-    omni = RootAuthorization(name="Omnipotent", community=community_arr[0])
+    omni = RootAuthorization(name="Omnipotent", id=1, parent_id=1, community_id=1)
     db_session.add(omni)
     board = Position(
         name="Board of Directors",
@@ -147,7 +148,9 @@ def seed_db(db_session):
         r.direct_charges.append(late_charge)
         db_session.add(r)
 
-    sys_admin = omni.delegate("Sys Admin", Permissions.MODIFY_BILLING_SETTINGS)
+    sys_admin = Authorization(
+        name="Sys Admin", parent=omni, permissions=Permissions.MODIFY_BILLING_SETTINGS
+    )
     prez = Position(
         name="President",
         community=community_arr[0],

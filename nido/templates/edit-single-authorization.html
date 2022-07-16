@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Edit Authorizations{% endblock %}
+{% block body_id %}edit-single-authorization{% endblock %}
+{% block body %}
+<main>
+  <h1>Edit Authorization</h1>
+  <h2>Update</h2>
+    <form method="post">
+      <label>Name:<input name="name" value="{{auth.name}}" required></label>
+      {% if auth.parent_id != auth.id %}
+        <label>Delegated From:<input name="parent" value="{{auth.parent.name or ''}}" disabled></label>
+      {% endif %}
+      <fieldset>
+      {% for member in perms %}
+        <label>{{member.name}}:<input
+          type="checkbox" name="{{member.name}}" value="{{member.value}}"
+          {% if auth.permits(member)%}checked{%endif%}
+          {% if auth.parent_id == auth.id or not auth.parent.permits(member)%}disabled{%endif%}>
+        </label>
+      {% endfor %}
+      </fieldset>
+      <button>Update</button>
+    </form>
+  {% if auth.parent_id != auth.id %}
+  <h2>Delete</h2>
+    <form method="post" action="{{ url_for('.delete_authorization', auth_id=auth.id)}}">
+      <button>Delete</button>
+    </form>
+  {% endif %}
+</main>
+{% endblock %}
