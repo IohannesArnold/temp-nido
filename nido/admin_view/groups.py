@@ -1,4 +1,4 @@
-#  Nido positions.py
+#  Nido groups.py
 #  Copyright (C) 2022 John Arnold
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -25,32 +25,30 @@ from flask import (
 )
 from nido.auth import login_required, get_user_id, get_community_id, is_admin
 
-from nido.models import Position
+from nido.models import Group
 
 posit_bp = Blueprint("posit", __name__)
 
 
-@posit_bp.route("/edit-positions")
+@posit_bp.route("/edit-groups")
 @login_required
-def edit_positions():
+def edit_groups():
     community_id = get_community_id()
     if not is_admin(community_id, get_user_id()):
         return abort(403)
-    positions = (
-        current_app.Session.query(Position).filter_by(community_id=community_id).all()
-    )
-    return render_template("edit-positions.html", positions=positions)
+    groups = current_app.Session.query(Group).filter_by(community_id=community_id).all()
+    return render_template("edit-groups.html", groups=groups)
 
 
-@posit_bp.post("/edit-positions")
+@posit_bp.post("/edit-groups")
 @login_required
-def edit_positions_post():
+def edit_groups_post():
     delete_id = request.form.get("delete_id")
     if delete_id:
-        delend = current_app.Session.get(Position, int(delete_id))
-        if delend.authorization.parent_id is None:
+        delend = current_app.Session.get(Group, int(delete_id))
+        if delend.role.parent_id is None:
             pass
         else:
             current_app.Session.delete(delend)
             current_app.Session.commit()
-    return redirect(url_for(".edit_positions"))
+    return redirect(url_for(".edit_groups"))

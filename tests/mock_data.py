@@ -5,9 +5,9 @@ from nido.models import (
     User,
     UserSession,
     Residence,
-    Position,
-    Authorization,
-    RootAuthorization,
+    Group,
+    Role,
+    RootRole,
     BillingCharge,
     Frequency,
     RecurringCharge,
@@ -110,13 +110,13 @@ def seed_db(db_session):
         a.recurring_charges.append(recurring_charge)
         db_session.add(a)
 
-    omni = RootAuthorization(name="Omnipotent", id=1, parent_id=1, community_id=1)
+    omni = RootRole(name="Omnipotent", id=1, parent_id=1, community_id=1)
     db_session.add(omni)
-    board = Position(
+    board = Group(
         name="Board of Directors",
         min_size=1,
         max_size=3,
-        authorization=omni,
+        role=omni,
         community=community_arr[0],
     )
     db_session.add(board)
@@ -148,15 +148,15 @@ def seed_db(db_session):
         r.direct_charges.append(late_charge)
         db_session.add(r)
 
-    sys_admin = Authorization(
+    sys_admin = Role(
         name="Sys Admin", parent=omni, permissions=Permissions.MODIFY_BILLING_SETTINGS
     )
-    prez = Position(
+    prez = Group(
         name="President",
         community=community_arr[0],
         min_size=1,
         max_size=1,
-        authorization=sys_admin,
+        role=sys_admin,
     )
     prez.members.append(resident_arr[0])
     db_session.add(prez)

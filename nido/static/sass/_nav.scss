@@ -121,11 +121,11 @@ nav#main_menu {
       content: url('/static/icons/dashboard.svg');
     }
 
-    &[href="/admin/edit-authorizations"]:before {
+    &[href="/admin/edit-permissions"]:before {
       content: url('/static/icons/key.svg');
     }
 
-    &[href="/admin/edit-positions"]:before {
+    &[href="/admin/edit-groups"]:before {
       content: url('/static/icons/group.svg');
     }
 

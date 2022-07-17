@@ -109,11 +109,11 @@ class Community(Base):
     members = orm.relationship(
         "User", lazy=True, backref=orm.backref("community", lazy=True)
     )
-    positions = orm.relationship(
-        "Position", lazy=True, backref=orm.backref("community", lazy=True)
+    groups = orm.relationship(
+        "Group", lazy=True, backref=orm.backref("community", lazy=True)
     )
     abilities = orm.relationship(
-        "Authorization", lazy=True, backref=orm.backref("community", lazy=True)
+        "Role", lazy=True, backref=orm.backref("community", lazy=True)
     )
 
     def __repr__(self):
@@ -205,25 +205,21 @@ class ResidenceOccupancy(Base):
         return "ResidenceOccupancy()"
 
 
-user_positions = Table(
-    "user_positions",
+user_groups = Table(
+    "user_groups",
     Base.metadata,
     Column("user_id", sql_types.Integer, ForeignKey("user.id"), primary_key=True),
-    Column(
-        "position_id", sql_types.Integer, ForeignKey("position.id"), primary_key=True
-    ),
+    Column("group_id", sql_types.Integer, ForeignKey("group.id"), primary_key=True),
 )
 
 
-class Position(Base):
-    __tablename__ = "position"
+class Group(Base):
+    __tablename__ = "group"
     __table_args__ = (sql_schema.UniqueConstraint("id", "community_id"),)
 
     id = Column(sql_types.Integer, primary_key=True)
     community_id = Column(sql_types.Integer, ForeignKey("community.id"), nullable=False)
-    authorization_id = Column(
-        sql_types.Integer, ForeignKey("authorization.id"), nullable=False
-    )
+    role_id = Column(sql_types.Integer, ForeignKey("role.id"), nullable=False)
 
     name = Column(sql_types.String(80), nullable=False)
     max_size = Column(sql_types.Integer, nullable=True)
@@ -232,12 +228,12 @@ class Position(Base):
     members = orm.relationship(
         "User",
         lazy=True,
-        secondary=user_positions,
-        backref=orm.backref("positions", lazy=True),
+        secondary=user_groups,
+        backref=orm.backref("groups", lazy=True),
     )
 
     def __repr__(self):
-        return f"Position(" f"name={self.name}," f"max_size={self.max_size}" f")"
+        return f"Group(" f"name={self.name}," f"max_size={self.max_size}" f")"
 
     @orm.validates("members", include_removes=True)
     def validate_members(self, _key, member, is_remove):
@@ -245,8 +241,8 @@ class Position(Base):
             not is_remove
             and self.max_size
             and self.max_size
-            <= current_app.Session.query(user_positions)
-            .filter_by(position_id=self.id)
+            <= current_app.Session.query(user_groups)
+            .filter_by(group_id=self.id)
             .distinct()
             .count()
         ):
@@ -256,8 +252,8 @@ class Position(Base):
             is_remove
             and self.min_size
             and self.min_size
-            >= current_app.Session.query(user_positions)
-            .filter_by(position_id=self.id)
+            >= current_app.Session.query(user_groups)
+            .filter_by(group_id=self.id)
             .distinct()
             .count()
         ):
@@ -293,13 +289,13 @@ for member in Permissions:
     )
 
 
-class Authorization(Base, PermissionsMixin):
-    __tablename__ = "authorization"
+class Role(Base, PermissionsMixin):
+    __tablename__ = "role"
     __table_args__ = (
         sql_schema.UniqueConstraint("id", "community_id"),
         sql_schema.ForeignKeyConstraint(
             ["parent_id", "community_id"],
-            ["authorization.id", "authorization.community_id"],
+            ["role.id", "role.community_id"],
         ),
     )
 
@@ -328,13 +324,13 @@ class Authorization(Base, PermissionsMixin):
                 f"{self.name}.{key} cannot be changed to {value} because parent has {parent_val}"
             )
 
-    positions = orm.relationship(
-        "Position",
+    groups = orm.relationship(
+        "Group",
         lazy=True,
-        backref=orm.backref("authorization", lazy=True),
+        backref=orm.backref("role", lazy=True),
     )
     children = orm.relationship(
-        "Authorization",
+        "Role",
         lazy=True,
         overlaps="abilities,community",
         backref=orm.backref(
@@ -344,14 +340,14 @@ class Authorization(Base, PermissionsMixin):
 
     __mapper_args__ = {
         "polymorphic_on": sql_expr.case(
-            (parent_id == id, "root_authorization"),
-            else_="authorization",
+            (parent_id == id, "root_role"),
+            else_="role",
         ),
-        "polymorphic_identity": "authorization",
+        "polymorphic_identity": "role",
     }
 
     def __repr__(self):
-        return f"Authorization(" f"name={self.name}" f")"
+        return f"Role(" f"name={self.name}" f")"
 
     def permits(self, request):
         return self.permissions & request == request
@@ -364,8 +360,8 @@ class Authorization(Base, PermissionsMixin):
         return out[:-2]
 
 
-class RootAuthorization(Authorization):
-    __mapper_args__ = {"polymorphic_identity": "root_authorization"}
+class RootRole(Role):
+    __mapper_args__ = {"polymorphic_identity": "root_role"}
 
     @hybrid_property
     def permissions(self):

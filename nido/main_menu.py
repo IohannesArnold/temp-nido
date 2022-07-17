@@ -28,12 +28,8 @@ class MenuLink:
 def admin_menu():
     menu_list = []
     menu_list.append(MenuLink("Dashboard", url_for("admin.dash.dashboard")))
-    menu_list.append(MenuLink("Edit Positions", url_for("admin.posit.edit_positions")))
-    menu_list.append(
-        MenuLink(
-            "Edit Authorizations", url_for("admin.authorizations.edit_authorizations")
-        )
-    )
+    menu_list.append(MenuLink("Edit Groups", url_for("admin.posit.edit_groups")))
+    menu_list.append(MenuLink("Edit Permissions", url_for("admin.roles.edit_roles")))
     menu_list.append(MenuLink("User View", url_for("index")))
     menu_list.append(MenuLink("Logout", url_for("logout")))
     return menu_list

@@ -15,14 +15,14 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import Blueprint
-from .authorizations import bp as auth_bp
 from .dashboard import dash_bp, dashboard
-from .positions import posit_bp
+from .groups import posit_bp
+from .permissions import bp as perm_bp
 
 
 admin_bp = Blueprint("admin", __name__)
 
 admin_bp.add_url_rule("/", endpoint="root", view_func=dashboard)
-admin_bp.register_blueprint(auth_bp)
+admin_bp.register_blueprint(perm_bp)
 admin_bp.register_blueprint(dash_bp)
 admin_bp.register_blueprint(posit_bp)

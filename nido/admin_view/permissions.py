@@ -1,4 +1,4 @@
-#  Nido admin.py
+#  Nido permissions.py
 #  Copyright (C) 2022 John Arnold
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -27,67 +27,65 @@ from flask import (
 from sqlalchemy.orm import load_only, selectinload
 from nido.auth import login_required, get_user_id, get_community_id, is_admin
 
-from nido.models import User, Position, Authorization, user_positions
+from nido.models import User, Group, Role, user_groups
 from nido.permissions import Permissions
 from nido.main_menu import MenuLink
 
 from functools import reduce
 
 
-def check_edit_auth_allowed(auth_id):
+def check_edit_role_allowed(role_id):
     subquery = (
-        current_app.Session.query(Authorization.parent_id)
-        .filter_by(id=auth_id)
-        .subquery()
+        current_app.Session.query(Role.parent_id).filter_by(id=role_id).subquery()
     )
     return (
-        current_app.Session.query(Authorization)
+        current_app.Session.query(Role)
         .filter_by(id=subquery)
-        .join(Position)
-        .join(user_positions)
+        .join(Group)
+        .join(user_groups)
         .filter_by(user_id=get_user_id())
         .count()
         > 0
     )
 
 
-bp = Blueprint("authorizations", __name__)
+bp = Blueprint("roles", __name__)
 
 
-@bp.route("/edit-authorizations")
+@bp.route("/edit-permissions")
 @login_required
-def edit_authorizations():
+def edit_roles():
     community_id = get_community_id()
     user_id = get_user_id()
     if not is_admin(community_id, user_id):
         return abort(403)
-    authorizations = (
-        current_app.Session.query(Authorization)
+    roles = (
+        current_app.Session.query(Role)
         .filter_by(community_id=community_id)
-        .options(selectinload(Authorization.positions).load_only(Position.name))
+        .options(selectinload(Role.groups).load_only(Group.name))
         .all()
     )
     parents = (
-        current_app.Session.query(Authorization.id, Authorization.name)
+        current_app.Session.query(Role.id, Role.name)
         .filter_by(community_id=community_id, CAN_DELEGATE=True)
-        .join(Position)
-        .join(user_positions)
+        .join(Group)
+        .join(user_groups)
         .filter_by(user_id=user_id)
         .all()
     )
     return render_template(
-        "edit-authorizations.html",
-        authorizations=authorizations,
+        "edit-permissions.html",
+        roles=roles,
         parents=parents,
         perms=Permissions,
     )
 
 
-@bp.post("/edit-authorizations/new")
+@bp.post("/edit-permissions/new")
 @login_required
-def create_new_authorization():
-    parent = current_app.Session.get(Authorization, request.form["parent_id"])
-    new = Authorization(
+def create_new_role():
+    parent = current_app.Session.get(Role, request.form["parent_id"])
+    new = Role(
         name=request.form["name"],
         parent=parent,
         permissions=reduce(
@@ -97,42 +95,42 @@ def create_new_authorization():
     )
     current_app.Session.add(new)
     current_app.Session.commit()
-    return redirect(url_for(".edit_authorizations"))
+    return redirect(url_for(".edit_roles"))
 
 
-@bp.route("/edit-authorizations/<int:auth_id>")
+@bp.route("/edit-permissions/<int:role_id>")
 @login_required
-def edit_single_authorization(auth_id):
-    if not check_edit_auth_allowed(auth_id):
+def edit_single_role(role_id):
+    if not check_edit_role_allowed(role_id):
         return abort(403)
-    modificand = current_app.Session.get(Authorization, auth_id)
+    modificand = current_app.Session.get(Role, role_id)
     return render_template(
-        "edit-single-authorization.html", auth=modificand, perms=Permissions
+        "edit-single-perm-role.html", role=modificand, perms=Permissions
     )
 
 
-@bp.post("/edit-authorizations/<int:auth_id>")
+@bp.post("/edit-permissions/<int:role_id>")
 @login_required
-def update_single_authorization(auth_id):
-    if not check_edit_auth_allowed(auth_id):
+def update_single_role(role_id):
+    if not check_edit_role_allowed(role_id):
         return abort(403)
-    modificand = current_app.Session.get(Authorization, auth_id)
+    modificand = current_app.Session.get(Role, role_id)
     modificand.name = request.form["name"]
     for m in Permissions:
         setattr(modificand, m.name, Permissions(int(request.form.get(m.name, 0))))
 
     current_app.Session.commit()
-    return redirect(url_for(".edit_authorizations"))
+    return redirect(url_for(".edit_roles"))
 
 
-@bp.post("/edit-authorizations/<int:auth_id>/delete")
+@bp.post("/edit-permissions/<int:role_id>/delete")
 @login_required
-def delete_authorization(auth_id):
-    if not check_edit_auth_allowed(auth_id):
+def delete_role(role_id):
+    if not check_edit_role_allowed(role_id):
         return abort(403)
     else:
-        current_app.Session.query(Authorization).filter(
-            Authorization.id == auth_id, Authorization.parent_id != Authorization.id
+        current_app.Session.query(Role).filter(
+            Role.id == role_id, Role.parent_id != Role.id
         ).delete()
         current_app.Session.commit()
-    return redirect(url_for(".edit_authorizations"))
+    return redirect(url_for(".edit_roles"))

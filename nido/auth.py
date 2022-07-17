@@ -28,7 +28,7 @@ from flask import (
 )
 from werkzeug.local import LocalProxy
 
-from .models import User, UserSession, Position, user_positions, Authorization
+from .models import User, UserSession, Group, user_groups, Role
 
 
 ## Create functions to get id of active user and community
@@ -112,11 +112,11 @@ def login_required(view):
 ## Create function to check if a giver user is an admin
 def is_admin(community_id, user_id):
     return (
-        current_app.Session.query(Position)
+        current_app.Session.query(Group)
         .filter_by(community_id=community_id)
-        .join(user_positions)
+        .join(user_groups)
         .filter_by(user_id=user_id)
-        .join(Authorization)
+        .join(Role)
         .count()
         > 0
     )
