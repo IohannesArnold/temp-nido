@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}Manage Billing{% endblock %}
+{% block body_id %}manage-billing{% endblock %}
+{% block body %}
+  <main>
+    <h1>Manage Billing</h1>
+    <h2>Lookup Billing Records</h2>
+      <form method="get" action="{{url_for('.billing_records')}}">
+        <label>Get records for: <select name="lookup_id" required>
+          <option value=""></option>
+          <optgroup label="Residences">
+             {% for residence in residences %}
+             <option value="r{{residence.id}}">{{residence.unit_no}} {{residence.street}}</option>
+             {% endfor %}
+          </optgroup>
+          <optgroup label="Individuals">
+             {% for user in users %}
+             <option value="u{{user.id}}">{{user.family_name}}, {{user.personal_name}}</option>
+             {% endfor %}
+          </optgroup>
+        </select></label>
+        <button>Lookup</button>
+      </form>
+  </main>
+{% endblock %}

@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Edit Billing Records{% endblock %}
+{% block body_id %}edit-billing-records{% endblock %}
+{% block body %}
+  <main>
+    <h1>Edit Billing Records</h1>
+    <h2>Current Charges</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Charge Date</th>
+        <th>Due Date</th>
+        <th></th>
+      </tr></thead>
+      {% for charge in current_charges %}
+      <tr>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.name -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.formatted_amount -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.charge_date -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td>{% if charge.due_date <= today %}<b>{% endif -%}
+          {{charge.due_date -}}
+        {% if charge.due_date <= today %}</b>{% endif %}</td>
+        <td><form method="post" action="{{url_for('.delete_charge')}}">
+          <input type="hidden" name="delete_id" value="b{{charge.id}}"/>
+          <input type="hidden" name="lookup_id" value="{{lookup_id}}"/>
+          <button>Delete</button>
+        </form></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h2>Recurring Charges</h2>
+    <table>
+      <thead><tr>
+        <th>Name</th>
+        <th>Amount</th>
+        <th>Next Charge Date</th>
+        <th></th>
+      </tr></thead>
+      {% for charge in recurring_charges %}
+      <tr>
+        <td>{{charge.name}}</td>
+        <td>{{charge.formatted_amount}}</td>
+        <td>{{charge.next_charge}}</td>
+        <td><form method="post" action="{{url_for('.delete_charge')}}">
+          <input type="hidden" name="delete_id" value="r{{charge.id}}"/>
+          <input type="hidden" name="lookup_id" value="{{lookup_id}}"/>
+          <button>Delete</button>
+        </form></td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h2>Create New Recurring Charge</h2>
+      <form method="post" action="{{url_for('.new_recurring_charge')}}">
+        <input type="hidden" name="lookup_id" value="{{lookup_id}}"/>
+        <label>Name:<input name="name" required></label>
+        <label>Amount:<input name="amount" type="number" step="0.01" min="0" required></label>
+        <label>Days to pay:<input name="grace" type="number" min="1" required></label>
+        <label>Start Date:<input name="starting" type="date" pattern="\d{4}-\d{2}-\d{2}" required></label>
+        <fieldset>
+          <legend>Frequency:</legend>
+          <label><input name="frequency" value="DAILY" type="radio">Every <input name="DAILY" type="number" value="1" min="1" required> days</label>
+          <label><input name="frequency" value="MONTHLY" type="radio">Every <input name="MONTHLY" type="number" value="1" min="1" required> months</label>
+          <label><input name="frequency" value="YEARLY" type="radio">Every <input name="YEARLY" type="number" value="1" min="1" required> years</label>
+        </fieldset>
+        <button>Create</button>
+      </form>
+    <h2>Create New Single Charge</h2>
+      <form method="post" action="{{url_for('.new_single_charge')}}">
+        <input type="hidden" name="lookup_id" value="{{lookup_id}}"/>
+        <label>Name:<input name="name" required></label>
+        <label>Amount:<input name="amount" type="number" step="0.01" min="0" required></label>
+        <label>Due Date:<input name="due" type="date" pattern="\d{4}-\d{2}-\d{2}" required></label>
+        <button>Create</button>
+      </form>
+  </main>
+{% endblock %}

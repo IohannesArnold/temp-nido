@@ -28,6 +28,7 @@ class MenuLink:
 def admin_menu():
     menu_list = []
     menu_list.append(MenuLink("Dashboard", url_for("admin.dash.dashboard")))
+    menu_list.append(MenuLink("Manage Billing", url_for("admin.billing.root")))
     menu_list.append(MenuLink("Edit Groups", url_for("admin.posit.edit_groups")))
     menu_list.append(MenuLink("Edit Permissions", url_for("admin.roles.edit_roles")))
     menu_list.append(MenuLink("User View", url_for("index")))

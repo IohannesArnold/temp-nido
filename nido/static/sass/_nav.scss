@@ -121,6 +121,10 @@ nav#main_menu {
       content: url('/static/icons/dashboard.svg');
     }
 
+    &[href="/admin/manage-billing"]:before {
+      content: url('/static/icons/billing.svg');
+    }
+
     &[href="/admin/edit-permissions"]:before {
       content: url('/static/icons/key.svg');
     }
