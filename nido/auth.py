@@ -44,11 +44,16 @@ def get_user_id():
             redis_result = None
 
         if redis_result is None:
-            (user_id, community_id) = (
-                current_app.Session.query(UserSession.user_id, UserSession.community_id)
-                .filter(UserSession.id == session["user_session_id"])
-                .one()
-            )
+            try:
+                (user_id, community_id) = (
+                    current_app.Session.query(
+                        UserSession.user_id, UserSession.community_id
+                    )
+                    .filter(UserSession.id == session["user_session_id"])
+                    .one()
+                )
+            except:
+                return None
             g.user_id = user_id
             g.community_id = community_id
             try:
