@@ -23,39 +23,13 @@ from flask import (
     request,
     url_for,
 )
-from nido.auth import login_required, get_community_id, get_user_id
+from nido.auth import login_required, get_community_id, get_user_id, requires_permission
 from nido.models import BillingCharge, Frequency, Residence, RecurringCharge, User
 from nido.permissions import Permissions
 
 from datetime import date, timedelta
 import decimal
 import functools
-
-from flask import current_app
-
-from nido.models import Group, Role, user_groups
-
-## Create login_required attribute
-def requires_permission(perm):
-    def wrapper(view):
-        @functools.wraps(view)
-        def wrapped_view(**kwargs):
-            if (
-                current_app.Session.query(Role.id)
-                .filter_by(**{perm.name: True})
-                .join(Group)
-                .join(user_groups)
-                .filter_by(user_id=get_user_id())
-                .count()
-                < 1
-            ):
-                return abort(403)
-            return view(**kwargs)
-
-        return wrapped_view
-
-    return wrapper
-
 
 bill_bp = Blueprint("billing", __name__)
 

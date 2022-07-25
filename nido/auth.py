@@ -114,6 +114,28 @@ def login_required(view):
     return wrapped_view
 
 
+## Create attribute to test presence of permission
+def requires_permission(perm):
+    def wrapper(view):
+        @functools.wraps(view)
+        def wrapped_view(**kwargs):
+            if (
+                current_app.Session.query(Role.id)
+                .filter_by(**{perm.name: True})
+                .join(Group)
+                .join(user_groups)
+                .filter_by(user_id=get_user_id())
+                .count()
+                < 1
+            ):
+                return abort(403)
+            return view(**kwargs)
+
+        return wrapped_view
+
+    return wrapper
+
+
 ## Create function to check if a giver user is an admin
 def is_admin(community_id, user_id):
     return (
