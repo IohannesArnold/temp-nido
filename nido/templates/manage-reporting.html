@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Manage Issue Reporting{% endblock %}
+{% block body_id %}manage-reporting{% endblock %}
+{% block body %}
+  <main>
+    <h1>Manage Issue Reporting</h1>
+    <h2>Change Reporting Handler</h2>
+    <form method="post" action="{{url_for('.change_handler')}}">
+        <label>Set issue reporting handler to: <select name="handler_type" required>
+             <option value="{{current_handler.__mapper_args__.polymorphic_identity}}">{{current_handler.display_name()}}</option>
+             {% for p in possibilities %}
+             {% if p.display_name() != current_handler.display_name() %}
+             <option value="{{p.__mapper_args__.polymorphic_identity}}">{{p.display_name()}}</option>
+             {% endif %}
+             {% endfor %}
+        </select></label>
+        <button>Change</button>
+    </form>
+    {% if config_form %}
+      <h2>Configure Issue Reporting Via {{current_handler.display_name()}}:</h2>
+      {{config_form}}
+    {% endif %}
+  </main>
+{% endblock %}

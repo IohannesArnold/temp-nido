@@ -100,8 +100,12 @@ class Community(Base):
 
     name = Column(sql_types.String(120), nullable=False)
     country = Column(sql_types.String(80), nullable=False)
-    issue_handler = Column(sql_types.String(20))
-    issue_config = Column(sql_types.JSON())
+    reporting_handler = Column(
+        sql_types.String(20), nullable=False, server_default="disabled"
+    )
+    rh_config = Column(
+        sql_types.JSON(), nullable=False, server_default=sql_expr.text("'null'")
+    )
 
     residences = orm.relationship(
         "Residence", lazy=True, backref=orm.backref("community", lazy=True)
@@ -120,12 +124,18 @@ class Community(Base):
         return f"Community(name={self.name}, country={self.country})"
 
 
-class IssueHandler(Base):
+class ReportingHandler(Base):
     __table__ = Community.__table__
     __mapper_args__ = {
-        "include_properties": ["id", "issue_handler", "issue_config"],
-        "polymorphic_on": "issue_handler",
+        "include_properties": ["id", "reporting_handler", "rh_config"],
+        "polymorphic_on": "reporting_handler",
     }
+
+    def default_config(self):
+        return sql_types.JSON.NULL
+
+    def config_form(self):
+        return None
 
     def issue_categories(self):
         return None

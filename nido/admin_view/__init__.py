@@ -18,6 +18,7 @@ from flask import Blueprint
 from .billing import bill_bp
 from .dashboard import dash_bp, dashboard
 from .groups import posit_bp
+from .reporting import report_bp
 from .permissions import bp as perm_bp
 
 
@@ -28,3 +29,4 @@ admin_bp.register_blueprint(bill_bp)
 admin_bp.register_blueprint(perm_bp)
 admin_bp.register_blueprint(dash_bp)
 admin_bp.register_blueprint(posit_bp)
+admin_bp.register_blueprint(report_bp)

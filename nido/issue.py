@@ -15,17 +15,36 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 from flask import Blueprint, Markup, current_app, render_template, request
+import sqlalchemy.sql.expression as sql_expr
 from email.headerregistry import Address
 from email.message import EmailMessage
 from email import policy
 
 from .auth import login_required, get_community_id
 from .email import send_email
-from .models import IssueHandler
+from .models import ReportingHandler
 
 
-class EmailIssue(IssueHandler):
+class ReportingDisabled(ReportingHandler):
+    __mapper_args__ = {"polymorphic_identity": "disabled"}
+
+    @classmethod
+    def display_name(cls):
+        return "Disabled"
+
+
+class EmailIssue(ReportingHandler):
     __mapper_args__ = {"polymorphic_identity": "email"}
+
+    @classmethod
+    def display_name(cls):
+        return "Email"
+
+    def default_config(self):
+        return {"issue_address": "example" }
+
+    def config_form(self):
+        return render_template("email-issue-handler-config.html")
 
     def handle_new_submission(self, issue_subject, issue_body, issue_category=None):
         msg = EmailMessage(policy.SMTP)
@@ -43,14 +62,14 @@ issue_bp = Blueprint("issue", __name__)
 @login_required
 def root():
     community_id = get_community_id()
-    issue_handler = current_app.Session.get(IssueHandler, community_id)
+    handler = current_app.Session.get(ReportingHandler, community_id)
     if request.method == "POST":
         issue_subject = request.form.get("issue_subject")
         issue_body = request.form.get("issue_body")
-        issue_handler.handle_new_submission(issue_subject, issue_body)
-    custom_form = issue_handler.custom_submit_form()
+        handler.handle_new_submission(issue_subject, issue_body)
+    custom_form = handler.custom_submit_form()
     if custom_form:
         return render_template("issue.html", custom_form=Markup(custom_form))
 
-    issue_categories = issue_handler.issue_categories()
+    issue_categories = handler.issue_categories()
     return render_template("issue.html", issue_categories=issue_categories)

@@ -20,7 +20,7 @@ from enum import Flag, auto
 class Permissions(Flag):
     CAN_DELEGATE = auto()
     MODIFY_BILLING_SETTINGS = auto()
-    MODIFY_ISSUE_SETTINGS = auto()
+    MODIFY_REPORTING_SETTINGS = auto()
     READ_ER_CONTACTS = auto()
 
     def __bool__(self):
